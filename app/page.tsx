@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main style={{ maxWidth: 760, margin: "0 auto", padding: "0 1.25rem 5rem" }}>
+    <main style={{ maxWidth: 780, margin: "0 auto", padding: "0 1.25rem 5rem" }}>
 
       {/* Nav */}
       <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 0", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 10 }}>

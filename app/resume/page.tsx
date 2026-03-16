@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function Resume() {
   return (
-    <main style={{ maxWidth: 800, margin: "0 auto", padding: "0 1.25rem 6rem" }}>
+    <main style={{ maxWidth: 780, margin: "0 auto", padding: "0 1.25rem 6rem" }}>
 
       {/* Nav */}
       <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 0", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 10 }}>
@@ -57,11 +57,11 @@ export default function Resume() {
 
       {/* Experience */}
       <Section label="Experience">
-        {experience.map((job) => (
+        {experience.map((job, index) => (
           <div key={job.dates} className="two-col" style={{
             display: "grid", gridTemplateColumns: "170px 1fr", gap: "2rem",
             paddingBottom: "2.5rem", marginBottom: "2.5rem",
-            borderBottom: "1px solid var(--border)",
+            borderBottom: index === experience.length - 1 ? "none" : "1px solid var(--border)",
           }}>
             <div style={{ paddingTop: 3 }}>
               <p style={{ fontSize: 16, fontWeight: 600, color: "#2563a8", lineHeight: 1.7 }}>{job.dates}</p>

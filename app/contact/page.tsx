@@ -57,10 +57,10 @@ export default function Contact() {
   };
 
   return (
-    <main style={{ maxWidth: 640, margin: "0 auto", padding: "0 2rem 6rem" }}>
+    <main style={{ maxWidth: 780, margin: "0 auto", padding: "0 1.25rem 6rem" }}>
 
       {/* Nav */}
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.5rem 0", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 10 }}>
+      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 0", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 10 }}>
         <Link href="/" style={{
   borderRadius: "50%", width: 36, height: 36, flexShrink: 0,
   display: "block", overflow: "hidden",
