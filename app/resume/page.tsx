@@ -24,7 +24,7 @@ export default function Resume() {
   textDecoration: "none",
 }}>GS</Link>
         <div style={{ display: "flex", gap: "0.25rem" }}>
-          {[["About", "/"], ["Resume", "/resume"], ["Blog", "/blog"]].map(([label, href]) => (
+          {[["About", "/"], ["Resume", "/resume"], ["Blog", "/blog"], ["Contact", "/contact"]].map(([label, href]) => (
             <Link key={label} href={href} style={{
               fontSize: 15,
               fontWeight: 500,
