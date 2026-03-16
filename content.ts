@@ -4,7 +4,7 @@ export const profile = {
   location: "San Diego, CA",
   experience: "9+ years",
   email: "gowtham.subramaniam.c@gmail.com",
-  linkedin: "https://linkedin.com/in/yourprofile",
+  linkedin: "https://www.linkedin.com/in/gowthamsubramaniam/",
   photo: "/photo.jpeg",
   tagline:
     "Mechanical Engineer specializing in precision electromechanical systems — from molecular diagnostics to radiation detection platforms.",
