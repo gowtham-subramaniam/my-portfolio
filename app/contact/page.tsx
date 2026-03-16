@@ -121,7 +121,7 @@ export default function Contact() {
         )}
 
         {/* Name + Company */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+        <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
           <div>
             <label style={labelStyle}>Name *</label>
             <input

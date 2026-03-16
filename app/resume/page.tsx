@@ -9,29 +9,23 @@ export const metadata: Metadata = {
 
 export default function Resume() {
   return (
-    <main style={{ maxWidth: 800, margin: "0 auto", padding: "0 2rem 6rem" }}>
+    <main style={{ maxWidth: 800, margin: "0 auto", padding: "0 1.25rem 6rem" }}>
 
       {/* Nav */}
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.5rem 0", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 10 }}>
+      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 0", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 10 }}>
         <Link href="/" style={{
-  fontSize: 15, fontWeight: 700, color: "var(--accent)",
-  background: "var(--accent-bg)",
-  border: "2px solid var(--accent)",
-  borderRadius: "50%",
-  width: 36, height: 36,
-  display: "flex", alignItems: "center", justifyContent: "center",
-  letterSpacing: "0.02em",
-  textDecoration: "none",
-}}>GS</Link>
-        <div style={{ display: "flex", gap: "0.25rem" }}>
+          fontSize: 15, fontWeight: 700, color: "var(--accent)",
+          background: "var(--accent-bg)", border: "2px solid var(--accent)",
+          borderRadius: "50%", width: 36, height: 36, flexShrink: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          letterSpacing: "0.02em", textDecoration: "none",
+        }}>GS</Link>
+        <div className="nav-links" style={{ display: "flex", gap: "0.15rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
           {[["About", "/"], ["Resume", "/resume"], ["Blog", "/blog"], ["Contact", "/contact"]].map(([label, href]) => (
             <Link key={label} href={href} style={{
-              fontSize: 15,
-              fontWeight: 500,
+              fontSize: 15, fontWeight: 500,
               color: href === "/resume" ? "var(--accent)" : "var(--subtle)",
-              textDecoration: "none",
-              padding: "5px 12px",
-              borderRadius: 6,
+              textDecoration: "none", padding: "5px 10px", borderRadius: 6,
               background: href === "/resume" ? "var(--accent-bg)" : "transparent",
             }}>{label}</Link>
           ))}
@@ -39,9 +33,9 @@ export default function Resume() {
       </nav>
 
       {/* Header */}
-      <section style={{ padding: "3rem 0 2rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1.5rem" }}>
+      <section className="resume-header" style={{ padding: "3rem 0 2rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1.5rem" }}>
         <div>
-          <h1 style={{ fontSize: 34, fontWeight: 700, color: "var(--foreground)", letterSpacing: "-0.02em", marginBottom: "0.5rem" }}>
+          <h1 style={{ fontSize: "clamp(24px, 5vw, 34px)", fontWeight: 700, color: "var(--foreground)", letterSpacing: "-0.02em", marginBottom: "0.5rem" }}>
             {profile.name}
           </h1>
           <p style={{ fontSize: 16, color: "#2563a8", fontWeight: 600 }}>
@@ -60,7 +54,7 @@ export default function Resume() {
       {/* Experience */}
       <Section label="Experience">
         {experience.map((job) => (
-          <div key={job.dates} style={{
+          <div key={job.dates} className="two-col" style={{
             display: "grid", gridTemplateColumns: "170px 1fr", gap: "2rem",
             paddingBottom: "2.5rem", marginBottom: "2.5rem",
             borderBottom: "1px solid var(--border)",
@@ -103,8 +97,7 @@ export default function Resume() {
                     fontSize: 14, fontWeight: 500,
                     color: group.textColor,
                     background: group.color,
-                    padding: "5px 14px",
-                    borderRadius: 20,
+                    padding: "5px 14px", borderRadius: 20,
                     border: `1px solid ${group.color}`,
                   }}>{item}</span>
                 ))}
@@ -117,7 +110,7 @@ export default function Resume() {
       {/* Education */}
       <Section label="Education">
         {education.map((edu) => (
-          <div key={edu.year} style={{
+          <div key={edu.year} className="two-col" style={{
             display: "grid", gridTemplateColumns: "170px 1fr", gap: "2rem", marginBottom: "1.5rem",
           }}>
             <p style={{ fontSize: 16, fontWeight: 600, color: "#2563a8" }}>{edu.year}</p>

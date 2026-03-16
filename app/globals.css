@@ -53,3 +53,30 @@ body {
   background: #dedad4;
   color: #1a1814;
 }
+
+/* Mobile nav */
+@media (max-width: 600px) {
+  .nav-links a {
+    font-size: 13px !important;
+    padding: 4px 8px !important;
+  }
+
+  .hero-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .two-col {
+    grid-template-columns: 1fr !important;
+    gap: 0.25rem !important;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .resume-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+}

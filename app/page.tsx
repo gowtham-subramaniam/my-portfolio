@@ -9,66 +9,58 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main style={{ maxWidth: 760, margin: "0 auto", padding: "0 2rem 5rem" }}>
+    <main style={{ maxWidth: 760, margin: "0 auto", padding: "0 1.25rem 5rem" }}>
 
       {/* Nav */}
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.5rem 0", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 10 }}>
-        <span style={{
-  fontSize: 15, fontWeight: 700, color: "var(--accent)",
-  background: "var(--accent-bg)",
-  border: "2px solid var(--accent)",
-  borderRadius: "50%",
-  width: 36, height: 36,
-  display: "flex", alignItems: "center", justifyContent: "center",
-  letterSpacing: "0.02em",
-}}>GS</span>
-        <div style={{ display: "flex", gap: "0.25rem" }}>
+      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 0", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 10 }}>
+        <Link href="/" style={{
+          fontSize: 15, fontWeight: 700, color: "var(--accent)",
+          background: "var(--accent-bg)", border: "2px solid var(--accent)",
+          borderRadius: "50%", width: 36, height: 36, flexShrink: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          letterSpacing: "0.02em", textDecoration: "none",
+        }}>GS</Link>
+        <div className="nav-links" style={{ display: "flex", gap: "0.15rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
           {[["About", "/"], ["Resume", "/resume"], ["Blog", "/blog"], ["Contact", "/contact"]].map(([label, href]) => (
             <Link key={label} href={href} style={{
-              fontSize: 15,
-              fontWeight: 500,
+              fontSize: 15, fontWeight: 500,
               color: href === "/" ? "var(--accent)" : "var(--subtle)",
-              textDecoration: "none",
-              padding: "5px 12px",
-              borderRadius: 6,
+              textDecoration: "none", padding: "5px 10px", borderRadius: 6,
               background: href === "/" ? "var(--accent-bg)" : "transparent",
             }}>{label}</Link>
           ))}
         </div>
       </nav>
 
-    {/* Hero */}
-<section style={{ padding: "4rem 0 3rem", display: "flex", alignItems: "center", gap: "2.5rem", flexWrap: "wrap" }}>
-
-  <img
-    src={profile.photo}
-    alt={profile.name}
-    style={{
-      width: 170, height: 170, borderRadius: "20%",
-      objectFit: "cover",
-      border: "3px solid var(--accent)",
-      flexShrink: 0,
-      display: "block",
-    }}
-  />
-
-  <div>
-    <h1 style={{
-      fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 700,
-      color: "var(--foreground)", lineHeight: 1.15,
-      letterSpacing: "-0.03em", marginBottom: "0.75rem",
-    }}>
-      {profile.name}
-    </h1>
-    <p style={{ fontSize: 17, color: "var(--muted)", lineHeight: 1.7, maxWidth: 480, marginBottom: "0.75rem", fontWeight: 400 }}>
-      {profile.tagline}
-    </p>
-    <p style={{ fontSize: 16, color: "#2563a8", fontWeight: 600 }}>
-      {profile.location} · {profile.experience} experience
-    </p>
-  </div>
-
-</section>
+      {/* Hero */}
+      <section className="hero-row" style={{ padding: "3.5rem 0 2.5rem", display: "flex", alignItems: "center", gap: "2rem", flexWrap: "wrap" }}>
+        <img
+          src={profile.photo}
+          alt={profile.name}
+          style={{
+            width: 120, height: 120, borderRadius: "50%",
+            objectFit: "cover",
+            border: "3px solid var(--accent)",
+            flexShrink: 0,
+            display: "block",
+          }}
+        />
+        <div>
+          <h1 style={{
+            fontSize: "clamp(24px, 5vw, 40px)", fontWeight: 700,
+            color: "var(--foreground)", lineHeight: 1.15,
+            letterSpacing: "-0.03em", marginBottom: "0.75rem",
+          }}>
+            {profile.name}
+          </h1>
+          <p style={{ fontSize: 17, color: "var(--muted)", lineHeight: 1.7, maxWidth: 480, marginBottom: "0.75rem", fontWeight: 400 }}>
+            {profile.tagline}
+          </p>
+          <p style={{ fontSize: 15, color: "#2563a8", fontWeight: 600 }}>
+            {profile.location} · {profile.experience} experience
+          </p>
+        </div>
+      </section>
 
       {/* About */}
       <section style={{ padding: "2.5rem 0", borderTop: "1px solid var(--border)" }}>
