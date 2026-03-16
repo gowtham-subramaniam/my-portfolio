@@ -14,12 +14,16 @@ export default function Home() {
       {/* Nav */}
       <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 0", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 10 }}>
         <Link href="/" style={{
-          fontSize: 15, fontWeight: 700, color: "var(--accent)",
-          background: "var(--accent-bg)", border: "2px solid var(--accent)",
-          borderRadius: "50%", width: 36, height: 36, flexShrink: 0,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          letterSpacing: "0.02em", textDecoration: "none",
-        }}>GS</Link>
+  borderRadius: "50%", width: 36, height: 36, flexShrink: 0,
+  display: "block", overflow: "hidden",
+  border: "2px solid var(--accent)", textDecoration: "none",
+}}>
+  <img
+    src="/photo.jpeg"
+    alt="Gowtham Subramaniam"
+    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+  />
+</Link>
         <div className="nav-links" style={{ display: "flex", gap: "0.15rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
           {[["About", "/"], ["Resume", "/resume"], ["Blog", "/blog"], ["Contact", "/contact"]].map(([label, href]) => (
             <Link key={label} href={href} style={{
@@ -92,10 +96,24 @@ export default function Home() {
       {/* Footer */}
       <footer style={{ padding: "2rem 0", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <span style={{ fontSize: 13, color: "var(--subtle)" }}>© 2026 {profile.name}</span>
-        <div style={{ display: "flex", gap: "1.5rem" }}>
-          <a href={`mailto:${profile.email}`} style={{ fontSize: 13, color: "var(--subtle)", textDecoration: "none" }}>Email</a>
-          <a href={profile.linkedin} style={{ fontSize: 13, color: "var(--subtle)", textDecoration: "none" }}>LinkedIn</a>
-        </div>
+        <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+  <a href={`mailto:${profile.email}`} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--subtle)", textDecoration: "none" }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="4" width="20" height="16" rx="2"/>
+    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+  </svg>
+  Email
+</a>
+  <a href={profile.linkedin} target="_blank" rel="noopener noreferrer" style={{
+    display: "flex", alignItems: "center", gap: 6,
+    fontSize: 13, color: "var(--subtle)", textDecoration: "none",
+  }}>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+    </svg>
+    LinkedIn
+  </a>
+</div>
       </footer>
 
     </main>
