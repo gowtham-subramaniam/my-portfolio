@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --background: #f7f5f2;
+  --foreground: #1a1814;
+  --muted: #3d3830;
+  --subtle: #7a7068;
+  --faint: #a09890;
+  --border: #e2ddd8;
+  --accent: #2563a8;
+  --accent-bg: #eef4fc;
+  --tag-bg: #eceae6;
+  --tag-text: #3a3530;
+  --tag-border: #dedad4;
+  --btn-bg: #1a1814;
+  --btn-text: #f7f5f2;
+  --card-bg: #f0ede8;
+  --card-border: #e2ddd8;
+  --highlight: #f5f0e8;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #f7f5f2;
+    --foreground: #1a1814;
+    --muted: #3d3830;
+    --subtle: #7a7068;
+    --faint: #a09890;
+    --border: #e2ddd8;
+    --accent: #2563a8;
+    --accent-bg: #eef4fc;
+    --tag-bg: #eceae6;
+    --tag-text: #3a3530;
+    --tag-border: #dedad4;
+    --btn-bg: #1a1814;
+    --btn-text: #f7f5f2;
+    --card-bg: #f0ede8;
+    --card-border: #e2ddd8;
+    --highlight: #f5f0e8;
   }
 }
+
+* { box-sizing: border-box; }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #dedad4;
+  color: #1a1814;
 }

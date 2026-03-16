@@ -1,65 +1,111 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { profile } from "../content";
+
+export const metadata: Metadata = {
+  title: `${profile.name} — ${profile.title}`,
+  description: profile.tagline,
+};
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main style={{ maxWidth: 760, margin: "0 auto", padding: "0 2rem 5rem" }}>
+
+      {/* Nav */}
+      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.5rem 0", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 10 }}>
+        <span style={{
+  fontSize: 15, fontWeight: 700, color: "var(--accent)",
+  background: "var(--accent-bg)",
+  border: "2px solid var(--accent)",
+  borderRadius: "50%",
+  width: 36, height: 36,
+  display: "flex", alignItems: "center", justifyContent: "center",
+  letterSpacing: "0.02em",
+}}>GS</span>
+        <div style={{ display: "flex", gap: "0.25rem" }}>
+          {[["About", "/"], ["Resume", "/resume"], ["Blog", "/blog"]].map(([label, href]) => (
+            <Link key={label} href={href} style={{
+              fontSize: 15,
+              fontWeight: 500,
+              color: href === "/" ? "var(--accent)" : "var(--subtle)",
+              textDecoration: "none",
+              padding: "5px 12px",
+              borderRadius: 6,
+              background: href === "/" ? "var(--accent-bg)" : "transparent",
+            }}>{label}</Link>
+          ))}
+        </div>
+      </nav>
+
+    {/* Hero */}
+<section style={{ padding: "4rem 0 3rem", display: "flex", alignItems: "center", gap: "2.5rem", flexWrap: "wrap" }}>
+
+  <img
+    src={profile.photo}
+    alt={profile.name}
+    style={{
+      width: 170, height: 170, borderRadius: "20%",
+      objectFit: "cover",
+      border: "3px solid var(--accent)",
+      flexShrink: 0,
+      display: "block",
+    }}
+  />
+
+  <div>
+    <h1 style={{
+      fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 700,
+      color: "var(--foreground)", lineHeight: 1.15,
+      letterSpacing: "-0.03em", marginBottom: "0.75rem",
+    }}>
+      {profile.name}
+    </h1>
+    <p style={{ fontSize: 17, color: "var(--muted)", lineHeight: 1.7, maxWidth: 480, marginBottom: "0.75rem", fontWeight: 400 }}>
+      {profile.tagline}
+    </p>
+    <p style={{ fontSize: 16, color: "#2563a8", fontWeight: 600 }}>
+      {profile.location} · {profile.experience} experience
+    </p>
+  </div>
+
+</section>
+
+      {/* About */}
+      <section style={{ padding: "2.5rem 0", borderTop: "1px solid var(--border)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "1.5rem" }}>
+          <div style={{ width: 4, height: 26, background: "#2563a8", borderRadius: 2 }}></div>
+          <p style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em", color: "#2563a8" }}>About</p>
+        </div>
+        {profile.about.map((para, i) => (
+          <p key={i} style={{ fontSize: 16, color: "var(--muted)", lineHeight: 1.85, maxWidth: 620, marginBottom: "1.1rem" }}>
+            {para}
           </p>
+        ))}
+      </section>
+
+      {/* CTA */}
+      <section style={{ padding: "2.5rem 0", borderTop: "1px solid var(--border)", display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+        <Link href="/resume" style={{
+          background: "var(--btn-bg)", color: "var(--btn-text)",
+          padding: "11px 24px", borderRadius: 8, fontSize: 15, fontWeight: 600,
+          textDecoration: "none", letterSpacing: "-0.01em",
+        }}>View resume →</Link>
+        <Link href="/blog" style={{
+          background: "transparent", color: "var(--muted)",
+          padding: "11px 24px", borderRadius: 8, fontSize: 15, fontWeight: 500,
+          textDecoration: "none", border: "1px solid var(--border)",
+        }}>Read the blog →</Link>
+      </section>
+
+      {/* Footer */}
+      <footer style={{ padding: "2rem 0", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+        <span style={{ fontSize: 13, color: "var(--subtle)" }}>© 2026 {profile.name}</span>
+        <div style={{ display: "flex", gap: "1.5rem" }}>
+          <a href={`mailto:${profile.email}`} style={{ fontSize: 13, color: "var(--subtle)", textDecoration: "none" }}>Email</a>
+          <a href={profile.linkedin} style={{ fontSize: 13, color: "var(--subtle)", textDecoration: "none" }}>LinkedIn</a>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </footer>
+
+    </main>
   );
 }
