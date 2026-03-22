@@ -40,23 +40,41 @@ export default function HowPlasticsFail() {
         <p style={{ marginTop: "1rem" }}>Imagine this as a right angle triangle. The complex modulus is the hypotenuse. Since storage modulus has no phase lag, it is the cosine component of the complex modulus. Loss modulus, which is 90° out of phase, is the sine component. The angle used in both functions is the phase lag δ.</p>
         <p style={{ marginTop: "1rem" }}>tan(δ) is calculated as the ratio of E&apos;&apos;/E&apos;. If tan(δ) is greater than 1 the material is behaving more viscously (damping dominant), and if the value is less than 1 the material is behaving more elastically (stiffness dominant). Tg can be identified from DMA when the storage modulus drops sharply and tan(δ) reaches a peak. The temperature at this peak is taken as the Tg of the material.</p>
 
+        <figure style={{ margin: "2rem 0" }}>
+          <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", background: "var(--card-bg)" }}>
+            <img src="/images/blog/how-plastics-fail/dma-plot.png" alt="DMA plot" style={{ width: "100%", display: "block", filter: "brightness(0.95) saturate(0.9)" }} />
+          </div>
+          <figcaption style={{ fontSize: 13, color: "var(--subtle)", textAlign: "center", marginTop: "0.6rem", fontStyle: "italic" }}>
+            Figure 1 — Storage modulus, loss modulus and tan δ as a function of temperature. Four distinct viscoelastic regions are separated by dotted lines.
+          </figcaption>
+        </figure>
+
         <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--foreground)", margin: "2rem 0 0.75rem", letterSpacing: "-0.01em" }}>Building the Master Curve</h2>
         <p>The goal now is to get a master curve that shows storage/loss modulus over time, which can be used to estimate creep and stress relaxation.</p>
         <p style={{ marginTop: "1rem" }}>Using the DMA instrument, based on the strain amplitude, frequency range, and temperature range, the stress values are measured and the corresponding complex, storage, and loss moduli are calculated. This produces a separate curve for each temperature. The next step is to stitch these curves together to get the master curve.</p>
         <p style={{ marginTop: "1rem" }}>A reference temperature is selected and plotted. A shift factor is then calculated for each remaining temperature using the <strong>WLF equation</strong>:</p>
 
-        <div style={{ background: "#eef4fc", border: "1px solid #bdd4f4", borderRadius: 8, padding: "1rem 1.5rem", margin: "1.25rem 0", fontFamily: "monospace", fontSize: 15, color: "#1a4a8a", textAlign: "center" }}>
+        <div style={{ background: "#eef4fc", border: "1px solid #bdd4f4", borderRadius: 8, padding: "1rem 1.5rem", margin: "1.25rem 0", fontFamily: "monospace", fontSize: 15, color: "#1a4a8a", textAlign: "center" as const }}>
           log(a<sub>T</sub>) = −C₁(T − T<sub>ref</sub>) / (C₂ + (T − T<sub>ref</sub>))
         </div>
 
-        <p>C1 and C2 are material properties. Tref is the reference temperature, T is the temperature being fitted, and aT is the shift factor that determines how much to shift the curve. Note that this equation is valid only between Tg and Tg + 100°C; outside this range, an Arrhenius relationship is used instead.</p>
-        <p style={{ marginTop: "1rem" }}>Once log(aT) is found, it is used to calculate the reduced frequency:</p>
+        <p>C₁ and C₂ are material properties. T<sub>ref</sub> is the reference temperature, T is the temperature being fitted, and a<sub>T</sub> is the shift factor that determines how much to shift the curve. Note that this equation is valid only between Tg and Tg + 100°C; outside this range, an Arrhenius relationship is used instead.</p>
+        <p style={{ marginTop: "1rem" }}>Once log(a<sub>T</sub>) is found, it is used to calculate the reduced frequency:</p>
 
-        <div style={{ background: "#eef4fc", border: "1px solid #bdd4f4", borderRadius: 8, padding: "1rem 1.5rem", margin: "1.25rem 0", fontFamily: "monospace", fontSize: 15, color: "#1a4a8a", textAlign: "center" }}>
+        <div style={{ background: "#eef4fc", border: "1px solid #bdd4f4", borderRadius: 8, padding: "1rem 1.5rem", margin: "1.25rem 0", fontFamily: "monospace", fontSize: 15, color: "#1a4a8a", textAlign: "center" as const }}>
           ω<sub>r</sub> = ω · a<sub>T</sub>
         </div>
 
         <p>This gives the reduced frequency. Based on this, each curve is shifted to the left or the right until the edges of adjacent curves overlap smoothly. When this is repeated for all temperatures we get the master curve.</p>
+
+        <figure style={{ margin: "2rem 0" }}>
+          <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", background: "var(--card-bg)" }}>
+            <img src="/images/blog/how-plastics-fail/master-curve.png" alt="Master curve construction" style={{ width: "100%", display: "block", filter: "brightness(0.95) saturate(0.9)" }} />
+          </div>
+          <figcaption style={{ fontSize: 13, color: "var(--subtle)", textAlign: "center", marginTop: "0.6rem", fontStyle: "italic" }}>
+            Figure 2 — Individual frequency-sweep curves at different temperatures are shifted horizontally using the WLF equation to construct a single master curve spanning years of time.
+          </figcaption>
+        </figure>
 
       </div>
     </BlogPost>
