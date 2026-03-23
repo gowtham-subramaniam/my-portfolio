@@ -13,17 +13,13 @@ export default function Home() {
 
       {/* Nav */}
       <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 1.25rem", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 10, margin: "0 -1.25rem" }}>
-        <Link href="/" style={{
-          borderRadius: "50%", width: 36, height: 36, flexShrink: 0,
-          display: "block", overflow: "hidden",
-          border: "2px solid var(--accent)", textDecoration: "none",
-        }}>
-          <img
-            src="/photo.jpeg"
-            alt="Gowtham Subramaniam"
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
-        </Link>
+        <Link href="/" style={{ textDecoration: "none", flexShrink: 0 }}>
+  <img
+    src="/Logo.svg"
+    alt="Gowtham Subramaniam"
+    style={{ height: 48, width: "auto", display: "block" }}
+  />
+</Link>
         <div style={{ display: "flex", gap: "0.15rem" }}>
           {[["About", "/"], ["Resume", "/resume"], ["Blog", "/blog"], ["Contact", "/contact"]].map(([label, href]) => (
             <Link key={label} href={href} style={{
