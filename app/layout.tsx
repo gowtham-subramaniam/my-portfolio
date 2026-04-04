@@ -9,7 +9,16 @@ const geist = Geist({
 
 export const metadata: Metadata = {
   title: "Gowtham Subramaniam — Mechanical Engineer",
-  description: "Mechanical Engineer with 9+ years of experience designing precision electromechanical systems.",
+  description: "Senior Mechanical Engineer with 9+ years of experience in IVD medical devices, cartridge and instrument development, and R&D at Abbott Laboratories.",
+  keywords: ["mechanical engineer", "IVD", "medical devices", "Abbott", "San Diego", "polymer", "DMA", "viscoelasticity"],
+  authors: [{ name: "Gowtham Subramaniam" }],
+  openGraph: {
+    title: "Gowtham Subramaniam — Mechanical Engineer",
+    description: "Senior Mechanical Engineer specialising in IVD medical device development at Abbott Laboratories.",
+    url: "https://www.gowthamsubramaniam.com",
+    siteName: "Gowtham Subramaniam",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
