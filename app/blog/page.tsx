@@ -13,7 +13,7 @@ const posts = [
 
 export default function BlogPage() {
   return (
-    <main style={{ maxWidth: 780, margin: "0 auto", padding: "2rem 1.25rem" }}>
+    <main style={{ maxWidth: 780, margin: "0 auto", padding: "0 1.25rem 2rem" }}>
       <BlogNav />
       <h1 style={{ fontSize: 28, fontWeight: 700, color: "var(--foreground)", marginBottom: "0.5rem" }}>Blog</h1>
       <p style={{ fontSize: 15, color: "var(--subtle)", marginBottom: "2rem" }}>Engineering writeups and technical notes.</p>
