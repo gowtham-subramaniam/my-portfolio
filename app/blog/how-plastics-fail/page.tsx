@@ -25,6 +25,15 @@ export default function HowPlasticsFail() {
         <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--foreground)", margin: "2rem 0 0.75rem", letterSpacing: "-0.01em" }}>Viscoelastic Materials</h2>
         <p>Plastics and elastomers are classified as <strong>viscoelastic materials</strong>. That is, these materials have both elastic and viscous properties; this depends on the temperature — above and below a critical point the material changes from viscous (damping) to elastic (hard/strong), and this temperature is called the <strong>glass transition temperature (Tg)</strong>. In general, plastics are used in applications where the operating temperature is below their Tg, where the material is hard and strong. Whereas elastomers have a Tg generally lower than room temperature, so in their application the material is soft and compliant.</p>
 
+        <figure style={{ margin: "2rem 0" }}>
+          <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", background: "var(--card-bg)" }}>
+            <img src="/images/blog/how-plastics-fail/stress-strain-curves.png" alt="Stress strain curves for metal, plastic and elastomer" style={{ width: "100%", display: "block", filter: "brightness(0.96) saturate(0.9)" }} />
+          </div>
+          <figcaption style={{ fontSize: 13, color: "var(--subtle)", textAlign: "center", marginTop: "0.6rem", fontStyle: "italic" }}>
+            Figure 1 — Stress-strain behaviour of metal, plastic and elastomer. Metals fracture after yielding, plastics undergo large deformation, and elastomers sustain very large strains before failure.
+          </figcaption>
+        </figure>
+
         <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--foreground)", margin: "2rem 0 0.75rem", letterSpacing: "-0.01em" }}>Molecular Structure</h2>
         <p>One more difference is the molecular structure. Plastics are multiples of monomers connected to form a polymer, linked together like a long chain. A piece of plastic has thousands of these polymer chains and none of them are connected to each other. In elastomers the polymer chains are interconnected with each other and these connections are called <strong>crosslinks</strong>. These crosslinks act as anchors, preventing chains from permanently sliding past each other — which is why elastomers recover from deformation while plastics are more prone to permanent creep.</p>
 
@@ -33,19 +42,38 @@ export default function HowPlasticsFail() {
         <p style={{ marginTop: "1rem" }}><strong>Creep</strong> is when a part is subjected to a constant stress and the material deforms over time. This is commonly noticeable in snap fits, where the snap arms are subjected to constant stress against the capture features, but over time the snap arms creep into a &quot;new&quot; shape, losing their clamp force.</p>
         <p style={{ marginTop: "1rem" }}><strong>Stress relaxation</strong>, on the other hand, is when the strain in the part is kept constant but the resultant stress/force reduces over time. You can notice this in O-ring compression. The gasket is compressed to a set height, resulting in a compression force to seal a part. Over time the gasket relaxes and loses its sealing force.</p>
 
+        <figure style={{ margin: "2rem 0" }}>
+          <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", background: "var(--card-bg)" }}>
+            <img src="/images/blog/how-plastics-fail/creep-stress-relaxation.png" alt="Creep and stress relaxation viscoelastic behaviour" style={{ width: "100%", display: "block", filter: "brightness(0.96) saturate(0.9)" }} />
+          </div>
+          <figcaption style={{ fontSize: 13, color: "var(--subtle)", textAlign: "center", marginTop: "0.6rem", fontStyle: "italic" }}>
+            Figure 2 — Creep (left): constant stress causes increasing strain over time. Stress relaxation (right): constant strain causes decreasing stress over time.
+          </figcaption>
+        </figure>
+
         <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--foreground)", margin: "2rem 0 0.75rem", letterSpacing: "-0.01em" }}>Dynamic Mechanical Analysis (DMA)</h2>
         <p>This demands special attention when an engineer designs and manufactures a part. Engineers need to know whether the part will last for the cycles and duration it is rated for. How can engineers determine this? The most straightforward approach is to subject the part to its operating temperatures and wait for the entire duration of its lifetime. Is this practical? No — companies do not have the luxury of waiting 20 years to launch a product.</p>
         <p style={{ marginTop: "1rem" }}>The test can be accelerated by increasing the temperature, which leads to a reduced test duration. How is it done? It is done with the help of <strong>Dynamic Mechanical Analysis (DMA)</strong>. A material is subjected to cyclical load with varying frequency and temperature. This is carried out using an instrument where the cyclical load is applied as strain and the instrument measures the resulting stress. If the material is purely elastic, the time at which max strain is applied is when the max stress will be — no lag. If the material is purely viscous, the stress response will lag the strain input by 90 degrees. Real polymers fall somewhere in between. This lag is called the <strong>phase lag</strong>. Since the input is sinusoidal, the phase lag is represented in degrees. The closer the phase lag is to 0°, the more elastic the material behaves; the closer to 90°, the more viscous.</p>
+
+        <figure style={{ margin: "2rem 0" }}>
+          <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", background: "var(--card-bg)" }}>
+            <img src="/images/blog/how-plastics-fail/dma-phase-lag.png" alt="DMA phase lag between strain input and stress output" style={{ width: "100%", display: "block", filter: "brightness(0.96) saturate(0.9)" }} />
+          </div>
+          <figcaption style={{ fontSize: 13, color: "var(--subtle)", textAlign: "center", marginTop: "0.6rem", fontStyle: "italic" }}>
+            Figure 3 — The phase shift δ between strain input and stress output in a DMA test. A purely elastic material has δ = 0°; a purely viscous material has δ = 90°.
+          </figcaption>
+        </figure>
+
         <p style={{ marginTop: "1rem" }}>The measured stress and input strain are used to calculate the modulus, called the <strong>complex modulus</strong>. It is the resultant of storage modulus (E&apos;) and loss modulus (E&apos;&apos;). Loss modulus tells how much the material will dampen the output — that is, energy dissipated in the form of heat. Storage modulus tells how much energy is stored when the material is deformed.</p>
         <p style={{ marginTop: "1rem" }}>Imagine this as a right angle triangle. The complex modulus is the hypotenuse. Since storage modulus has no phase lag, it is the cosine component of the complex modulus. Loss modulus, which is 90° out of phase, is the sine component. The angle used in both functions is the phase lag δ.</p>
         <p style={{ marginTop: "1rem" }}>tan(δ) is calculated as the ratio of E&apos;&apos;/E&apos;. If tan(δ) is greater than 1 the material is behaving more viscously (damping dominant), and if the value is less than 1 the material is behaving more elastically (stiffness dominant). Tg can be identified from DMA when the storage modulus drops sharply and tan(δ) reaches a peak. The temperature at this peak is taken as the Tg of the material.</p>
 
         <figure style={{ margin: "2rem 0" }}>
           <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", background: "var(--card-bg)" }}>
-            <img src="/images/blog/how-plastics-fail/dma-plot.png" alt="DMA plot" style={{ width: "100%", display: "block", filter: "brightness(0.95) saturate(0.9)" }} />
+            <img src="/images/blog/how-plastics-fail/dma-plot.png" alt="DMA plot showing storage modulus, loss modulus and tan delta vs temperature" style={{ width: "100%", display: "block", filter: "brightness(0.96) saturate(0.9)" }} />
           </div>
           <figcaption style={{ fontSize: 13, color: "var(--subtle)", textAlign: "center", marginTop: "0.6rem", fontStyle: "italic" }}>
-            Figure 1 — Storage modulus, loss modulus and tan δ as a function of temperature. Four distinct viscoelastic regions are separated by dotted lines.
+            Figure 4 — Storage modulus, loss modulus and tan δ as a function of temperature. Four distinct viscoelastic regions are separated by dotted lines.
           </figcaption>
         </figure>
 
@@ -69,10 +97,10 @@ export default function HowPlasticsFail() {
 
         <figure style={{ margin: "2rem 0" }}>
           <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", background: "var(--card-bg)" }}>
-            <img src="/images/blog/how-plastics-fail/master-curve.png" alt="Master curve construction" style={{ width: "100%", display: "block", filter: "brightness(0.95) saturate(0.9)" }} />
+            <img src="/images/blog/how-plastics-fail/master-curve.png" alt="Master curve construction showing horizontal shift using WLF equation" style={{ width: "100%", display: "block", filter: "brightness(0.96) saturate(0.9)" }} />
           </div>
           <figcaption style={{ fontSize: 13, color: "var(--subtle)", textAlign: "center", marginTop: "0.6rem", fontStyle: "italic" }}>
-            Figure 2 — Individual frequency-sweep curves at different temperatures are shifted horizontally using the WLF equation to construct a single master curve spanning years of time.
+            Figure 5 — Individual frequency-sweep curves at different temperatures are shifted horizontally using the WLF equation to construct a single master curve spanning years of time.
           </figcaption>
         </figure>
 
