@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import SiteNav from "../components/SiteNav";
 import { profile } from "../content";
 
 export const metadata: Metadata = {
@@ -11,28 +12,7 @@ export default function Home() {
   return (
     <main style={{ maxWidth: 780, margin: "0 auto", padding: "0 1.25rem 5rem" }}>
 
-      {/* Nav */}
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 1.25rem", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 10, margin: "0 -1.25rem" }}>
-        <Link href="/" style={{ textDecoration: "none", flexShrink: 0 }}>
-  <img
-    src="/Logo.svg"
-    alt="Gowtham Subramaniam"
-    style={{ height: 48, width: "auto", display: "block" }}
-  />
-</Link>
-        <div style={{ display: "flex", gap: "0.15rem" }}>
-          {[["About", "/"], ["Resume", "/resume"], ["Blog", "/blog"], ["Contact", "/contact"]].map(([label, href]) => (
-            <Link key={label} href={href} style={{
-              fontSize: 15,
-              fontWeight: href === "/" ? 700 : 500,
-              color: href === "/" ? "var(--accent)" : "var(--subtle)",
-              textDecoration: "none",
-              padding: "5px 8px",
-              borderRadius: 6,
-            }}>{label}</Link>
-          ))}
-        </div>
-      </nav>
+      <SiteNav />
 
       {/* Hero */}
       <section className="hero-row" style={{ padding: "3.5rem 0 2.5rem", display: "flex", alignItems: "center", gap: "2rem", flexWrap: "wrap" }}>
