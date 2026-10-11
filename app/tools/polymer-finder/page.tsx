@@ -6,7 +6,7 @@ import { profile } from "../../../content";
 export const metadata: Metadata = {
   title: `Polymer Finder — ${profile.name}`,
   description:
-    "Describe your part in plain language and screen 33 engineering polymers for temperature, sterilization, chemical resistance and cost. AI search runs in your browser.",
+    "Describe your part in plain language and screen 59 engineering polymers for temperature, sterilization, chemical resistance and cost. AI search runs in your browser.",
   openGraph: {
     title: "Polymer Finder",
     description:

@@ -14,8 +14,8 @@ const tools = [
     href: "/tools/polymer-finder",
     title: "Polymer Finder",
     summary:
-      "Describe your part in plain language and screen 33 engineering polymers for temperature, sterilization, chemical resistance and cost. Compare candidates side by side.",
-    tags: ["Materials", "Polymers", "AI search"],
+      "Describe your part in plain language and screen 59 engineering polymers for temperature, sterilization, chemical resistance and cost. Compare candidates side by side.",
+    tags: ["Materials", "Polymers", "Property chart", "AI search"],
   },
 ];
 

@@ -9,8 +9,11 @@ import {
   type Compat,
   type Family,
   type Polymer,
+  type Processing,
   type Rating,
 } from "./polymers";
+import PropertyChart, { type PointStatus } from "./PropertyChart";
+import { FIELD_NOTE_CATEGORIES, notesFor, type FieldNoteCategory } from "./fieldNotes";
 import {
   MODEL_ID,
   getDocEmbeddings,
@@ -117,7 +120,8 @@ function ResultCard({
   const p = result.polymer;
   return (
     <li
-      className={`rounded-[10px] border bg-[var(--card-bg)] px-5 py-[1.1rem] sm:px-6 ${
+      id={`pf-${p.id}`}
+      className={`scroll-mt-28 rounded-[10px] border bg-[var(--card-bg)] px-5 py-[1.1rem] sm:px-6 ${
         compared ? "border-[var(--accent)]" : "border-[var(--border)]"
       } ${dimmed ? "opacity-75" : ""}`}
     >
@@ -169,6 +173,10 @@ function ResultCard({
         >
           {expanded ? "Hide details ▴" : "Details ▾"}
         </button>
+        <span className="text-[12px] text-[var(--subtle)]">
+          {p.watchOuts.length} watch-out{p.watchOuts.length === 1 ? "" : "s"}
+          {notesFor(p.id).length > 0 && ` · ${notesFor(p.id).length} field note${notesFor(p.id).length === 1 ? "" : "s"}`}
+        </span>
         <label
           className={`flex items-center gap-2 text-[13px] font-medium ${
             compareDisabled && !compared ? "cursor-not-allowed text-[var(--faint)]" : "cursor-pointer text-[var(--muted)]"
@@ -192,7 +200,9 @@ function ResultCard({
 
 function Details({ p }: { p: Polymer }) {
   return (
-    <div className="mt-4 grid gap-6 border-t border-[var(--border)] pt-4 text-[14px] md:grid-cols-2">
+    <div className="mt-4 border-t border-[var(--border)] pt-4 text-[14px]">
+      <WatchOuts p={p} />
+      <div className="mt-5 grid gap-6 md:grid-cols-2">
       <div className="space-y-4">
         <ListBlock title="Strengths" items={p.strengths} />
         <ListBlock title="Limitations" items={p.limitations} />
@@ -243,8 +253,225 @@ function Details({ p }: { p: Polymer }) {
           <Row k="Also known as" v={p.aka.join(", ")} />
           <Row k="Data basis" v={p.grade} />
         </dl>
+        <ProcessingBlock pr={p.processing} elastomer={p.structure === "Elastomer" && p.processes.some((x) => /compression|transfer/i.test(x))} />
       </div>
+      </div>
+      <FieldNotes p={p} />
     </div>
+  );
+}
+
+function WatchOuts({ p }: { p: Polymer }) {
+  if (p.watchOuts.length === 0) return null;
+  return (
+    <div className="rounded-lg border border-[#f0dcc0] bg-[#fdf6ee] px-4 py-3">
+      <h4 className="mb-1.5 flex items-center gap-2 text-[13px] font-bold text-[#7a4010]">
+        <span aria-hidden>⚠</span> Design &amp; manufacturing watch-outs
+      </h4>
+      <ul className="space-y-1.5 text-[14px] leading-[1.6] text-[#5a3410]">
+        {p.watchOuts.map((w) => (
+          <li key={w} className="flex gap-2">
+            <span className="text-[#c98a2b]" aria-hidden>
+              •
+            </span>
+            <span>{w}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function range(r: [number, number] | null, unit: string) {
+  return r ? `${r[0]}–${r[1]} ${unit}` : "—";
+}
+
+function ProcessingBlock({ pr, elastomer }: { pr: Processing; elastomer: boolean }) {
+  return (
+    <div>
+      <h4 className={`mb-1.5 ${LABEL}`}>Processing (typical)</h4>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[13px]">
+        <Row k="Mold shrinkage" v={range(pr.shrinkPct, "%")} />
+        <Row k="Drying" v={pr.dryC ? `${pr.dryC} °C, ${pr.dryH ?? "2–4"} h` : "Not normally required"} />
+        <Row k={elastomer ? "Cure temp" : "Melt temp"} v={range(pr.meltC, "°C")} />
+        {!elastomer && <Row k="Mold temp" v={range(pr.moldC, "°C")} />}
+      </dl>
+      {pr.note && <p className="mt-1.5 text-[12px] leading-[1.6] text-[var(--subtle)]">{pr.note}</p>}
+    </div>
+  );
+}
+
+function FieldNotes({ p }: { p: Polymer }) {
+  const notes = notesFor(p.id);
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-6 border-t border-[var(--border)] pt-4">
+      <h4 className={`mb-2 ${LABEL}`}>Field notes from engineers</h4>
+      {notes.length === 0 ? (
+        <p className="text-[13px] leading-[1.6] text-[var(--subtle)]">
+          No field notes for {p.abbr} yet. If you have molded, machined, bonded or sterilized it, your experience helps the next engineer.
+        </p>
+      ) : (
+        <ul className="space-y-3">
+          {notes.map((n, i) => (
+            <li key={i} className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <span className={PILL}>{n.category}</span>
+                <span className="text-[12px] text-[var(--subtle)]">
+                  {n.attribution ?? "Anonymous engineer"} · {n.date}
+                </span>
+              </div>
+              <p className="text-[14px] leading-[1.65] text-[var(--muted)]">{n.note}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+      {open ? (
+        <FieldNoteForm p={p} onClose={() => setOpen(false)} />
+      ) : (
+        <button type="button" onClick={() => setOpen(true)} className="mt-3 text-[13px] font-semibold text-[var(--accent)] hover:underline">
+          + Share your experience with {p.abbr}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function FieldNoteForm({ p, onClose }: { p: Polymer; onClose: () => void }) {
+  const [form, setForm] = useState({ category: "" as FieldNoteCategory | "", note: "", name: "", role: "", email: "", publishName: false, website: "" });
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [error, setError] = useState("");
+  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.category || form.note.trim().length < 20) {
+      setState("error");
+      setError("Please choose a category and write at least 20 characters.");
+      return;
+    }
+    setState("sending");
+    try {
+      const res = await fetch("/api/field-note", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, polymerId: p.id }),
+      });
+      if (res.ok) {
+        setState("sent");
+      } else {
+        const j = await res.json().catch(() => ({}));
+        setState("error");
+        setError(j.error ?? "Couldn't send right now. Please try again later.");
+      }
+    } catch {
+      setState("error");
+      setError("Couldn't send right now. Please try again later.");
+    }
+  };
+
+  if (state === "sent") {
+    return (
+      <div className="mt-3 rounded-lg border border-[#cfe8cf] bg-[#f0faf0] px-3 py-2 text-[13px] text-[#1a5c2a]">
+        ✓ Thanks! Your note was sent for review. Notes are checked before they appear here.
+      </div>
+    );
+  }
+
+  const input =
+    "w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[14px] text-[var(--foreground)] outline-none placeholder:text-[var(--faint)] focus:border-[var(--accent)]";
+  const label = "mb-1 block text-[12px] font-semibold text-[var(--muted)]";
+
+  return (
+    <form onSubmit={submit} className="mt-3 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--background)] p-4">
+      <div className="text-[14px] font-semibold text-[var(--foreground)]">Share a field note about {p.name}</div>
+      <p className="text-[12px] leading-[1.6] text-[var(--subtle)]">
+        What went wrong, what surprised you, or what you&apos;d tell a colleague. Notes are reviewed before publishing. Please leave out
+        confidential details, part numbers and customer names.
+      </p>
+      <div>
+        <label className={label} htmlFor={`fn-cat-${p.id}`}>
+          Category
+        </label>
+        <select id={`fn-cat-${p.id}`} value={form.category} onChange={(e) => set("category", e.target.value as FieldNoteCategory)} className={input}>
+          <option value="">Choose…</option>
+          {FIELD_NOTE_CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className={label} htmlFor={`fn-note-${p.id}`}>
+          Your note
+        </label>
+        <textarea
+          id={`fn-note-${p.id}`}
+          rows={4}
+          maxLength={1500}
+          value={form.note}
+          onChange={(e) => set("note", e.target.value)}
+          placeholder={`e.g. "Our ${p.abbr} housings cracked at the snap-fits after two weeks of wiping with…"`}
+          className={`${input} resize-y`}
+        />
+        <div className="mt-0.5 text-right text-[11px] text-[var(--faint)]">{form.note.length}/1500</div>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className={label} htmlFor={`fn-name-${p.id}`}>
+            Name (optional)
+          </label>
+          <input id={`fn-name-${p.id}`} value={form.name} maxLength={80} onChange={(e) => set("name", e.target.value)} className={input} />
+        </div>
+        <div>
+          <label className={label} htmlFor={`fn-role-${p.id}`}>
+            Role / industry (optional)
+          </label>
+          <input
+            id={`fn-role-${p.id}`}
+            value={form.role}
+            maxLength={120}
+            onChange={(e) => set("role", e.target.value)}
+            placeholder="e.g. Process engineer, medical devices"
+            className={input}
+          />
+        </div>
+      </div>
+      <div>
+        <label className={label} htmlFor={`fn-email-${p.id}`}>
+          Email (optional, never published; only used if I have a question)
+        </label>
+        <input id={`fn-email-${p.id}`} type="email" value={form.email} maxLength={160} onChange={(e) => set("email", e.target.value)} className={input} />
+      </div>
+      {/* Honeypot for bots; hidden from people and screen readers */}
+      <input
+        type="text"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden
+        value={form.website}
+        onChange={(e) => set("website", e.target.value)}
+        className="absolute left-[-9999px] h-0 w-0 opacity-0"
+      />
+      <label className="flex cursor-pointer items-start gap-2 text-[13px] text-[var(--muted)]">
+        <input type="checkbox" checked={form.publishName} onChange={(e) => set("publishName", e.target.checked)} className="mt-[3px] h-[14px] w-[14px] accent-[#2563a8]" />
+        Show my name with the note (otherwise only the role is shown)
+      </label>
+      {state === "error" && <p className="text-[13px] text-[#8a2a1a]">{error}</p>}
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={state === "sending"}
+          className="rounded-lg bg-[var(--btn-bg)] px-4 py-2 text-[14px] font-semibold text-[var(--btn-text)] hover:opacity-90 disabled:opacity-60"
+        >
+          {state === "sending" ? "Sending…" : "Send for review"}
+        </button>
+        <button type="button" onClick={onClose} className="text-[13px] text-[var(--subtle)] hover:text-[var(--foreground)]">
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -364,6 +591,7 @@ export default function PolymerFinder() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [compare, setCompare] = useState<string[]>([]);
   const [showExcluded, setShowExcluded] = useState(false);
+  const [showChart, setShowChart] = useState(true);
 
   // Download the model on first interaction, not on page load.
   const ensureModel = useCallback(() => {
@@ -431,6 +659,24 @@ export default function PolymerFinder() {
 
   const toggleCompare = (id: string) =>
     setCompare((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : prev.length >= MAX_COMPARE ? prev : [...prev, id]));
+
+  // Chart: status per material, and a click handler that opens the card.
+  const chartStatus = useMemo(() => {
+    const st: Record<string, PointStatus> = {};
+    for (const p of POLYMERS) st[p.id] = "neutral";
+    if (ranking) {
+      for (const r of ranking.matches) st[r.polymer.id] = "candidate";
+      for (const r of ranking.excluded) st[r.polymer.id] = "excluded";
+    }
+    return st;
+  }, [ranking]);
+  const chartLabels = ranking ? ranking.matches.slice(0, 3).map((r) => r.polymer.id) : [];
+
+  const openFromChart = (id: string) => {
+    if (ranking?.excluded.some((r) => r.polymer.id === id)) setShowExcluded(true);
+    setExpanded(id);
+    setTimeout(() => document.getElementById(`pf-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+  };
 
   const comparePolymers = compare.map((id) => POLYMERS.find((p) => p.id === id)).filter((p): p is Polymer => Boolean(p));
   const searchMode = semScores ? "semantic" : "keyword";
@@ -569,6 +815,22 @@ export default function PolymerFinder() {
 
       {comparePolymers.length >= 2 && <CompareTable polymers={comparePolymers} onRemove={toggleCompare} onClear={() => setCompare([])} />}
 
+      {/* Property chart */}
+      <section className="mt-10" aria-label="Property chart">
+        <SectionHeading
+          right={
+            <button type="button" onClick={() => setShowChart((v) => !v)} aria-expanded={showChart} className="text-[13px] font-medium text-[var(--subtle)] hover:text-[var(--foreground)]">
+              {showChart ? "Hide chart" : "Show chart"}
+            </button>
+          }
+        >
+          Property map
+        </SectionHeading>
+        {showChart && (
+          <PropertyChart polymers={POLYMERS} status={chartStatus} compareIds={compare} labelIds={chartLabels} onSelect={openFromChart} />
+        )}
+      </section>
+
       {/* Results */}
       <section className="mt-10" aria-live="polite">
         {ranking ? (
@@ -625,6 +887,10 @@ export default function PolymerFinder() {
 
       {/* Footer note */}
       <footer className="mt-14 border-t border-[var(--border)] pt-6 text-[13px] leading-[1.7] text-[var(--subtle)]">
+        <p className="mb-3 rounded-lg bg-[var(--accent-bg)] px-4 py-3 text-[14px] text-[var(--muted)]">
+          <b className="text-[var(--foreground)]">Know something the datasheets don&apos;t say?</b> Open any material&apos;s details and use
+          &ldquo;Share your experience&rdquo; to send a field note. Notes are reviewed before they&apos;re published.
+        </p>
         <p>
           <b className="text-[var(--muted)]">Screening aid only.</b> Values are typical for a representative unfilled grade unless
           noted under &ldquo;Data basis&rdquo;; real grades vary widely. Chemical ratings assume room temperature and no applied

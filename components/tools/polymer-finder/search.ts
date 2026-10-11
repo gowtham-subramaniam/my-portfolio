@@ -12,7 +12,7 @@
  *    keyword score is used on its own.
  */
 
-import { CHEM_LABELS, POLYMERS, polymerDocText, type ChemKey, type Polymer } from './polymers';
+import { CHEM_LABELS, POLYMERS, polymerDocText, polymerKeywordText, type ChemKey, type Polymer } from './polymers';
 import { EMBEDDING_MODEL, PRECOMPUTED } from './embeddings';
 
 /* ───────────────────────────── Requirements ───────────────────────────── */
@@ -188,7 +188,7 @@ function tokenize(s: string): string[] {
     .map((t) => (t.length > 4 && t.endsWith('s') ? t.slice(0, -1) : t));
 }
 
-const DOC_TOKENS: Set<string>[] = POLYMERS.map((p) => new Set(tokenize(polymerDocText(p))));
+const DOC_TOKENS: Set<string>[] = POLYMERS.map((p) => new Set(tokenize(polymerKeywordText(p))));
 const IDF = (() => {
   const df = new Map<string, number>();
   for (const set of DOC_TOKENS) for (const t of set) df.set(t, (df.get(t) ?? 0) + 1);
