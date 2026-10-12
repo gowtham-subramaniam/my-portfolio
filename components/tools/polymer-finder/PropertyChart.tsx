@@ -71,7 +71,7 @@ function fmtTick(v: number) {
 
 /* ───────────────────────────── Chart ───────────────────────────── */
 
-export type PointStatus = "candidate" | "excluded" | "neutral";
+export type PointStatus = "candidate" | "other" | "excluded" | "neutral";
 
 
 const COLOR = {
@@ -117,6 +117,7 @@ export default function PropertyChart({
   const X = AXES[xKey];
   const Y = AXES[yKey];
   const hasExcluded = Object.values(status).includes("excluded");
+  const hasOther = Object.values(status).includes("other");
 
   const data = useMemo(() => {
     const pts = polymers
@@ -131,7 +132,7 @@ export default function PropertyChart({
   const ys = makeScale(scaleBasis.map((d) => d.y), Y.log, H - M.bottom, M.top);
 
   // Draw order: excluded under, then main, then compared on top.
-  const rank = (d: { p: Polymer; s: PointStatus }) => (compareIds.includes(d.p.id) ? 3 : d.s === "excluded" ? 1 : 2);
+  const rank = (d: { p: Polymer; s: PointStatus }) => (compareIds.includes(d.p.id) ? 4 : d.s === "excluded" ? 1 : d.s === "other" ? 2 : 3);
 
   // Pixel positions, nudging points that land on top of each other (identical
   // typical values are common) so every material stays visible and clickable.
@@ -160,9 +161,11 @@ export default function PropertyChart({
     `rounded-md border border-[var(--border)] bg-[var(--background)] px-2 py-1 text-[13px] text-[var(--foreground)] ${cls}`;
 
   const legend: { key: string; label: string; swatch: ReactNode }[] = [];
-  const mainLabel = hasExcluded ? "Meets your requirements" : "Material";
-  if (compareIds.length > 0 || hasExcluded) {
+  const mainLabel = hasOther ? "Best match" : hasExcluded ? "Meets your requirements" : "Material";
+  if (compareIds.length > 0 || hasExcluded || hasOther) {
     legend.push({ key: "m", label: mainLabel, swatch: <circle cx={6} cy={6} r={5} fill={COLOR.main} /> });
+    if (hasOther)
+      legend.push({ key: "o", label: "Other materials", swatch: <circle cx={6} cy={6} r={4} fill="none" stroke={COLOR.main} strokeOpacity={0.55} strokeWidth={2} /> });
     if (hasExcluded && showExcluded)
       legend.push({ key: "e", label: "Excluded", swatch: <circle cx={6} cy={6} r={4} fill="none" stroke={COLOR.excluded} strokeWidth={2} /> });
     if (compareIds.length > 0) legend.push({ key: "c", label: "Comparing", swatch: <circle cx={6} cy={6} r={5} fill={COLOR.compare} /> });
@@ -261,6 +264,7 @@ export default function PropertyChart({
             const { cx, cy } = pos.get(d.p.id)!;
             const comparing = compareIds.includes(d.p.id);
             const excluded = d.s === "excluded";
+            const other = d.s === "other";
             const isHover = hover?.id === d.p.id;
             const r = comparing ? 6.5 : excluded ? 4.5 : 5.5;
             return (
@@ -284,6 +288,8 @@ export default function PropertyChart({
                 <circle cx={cx} cy={cy} r={14} fill="transparent" />
                 {excluded && !comparing ? (
                   <circle cx={cx} cy={cy} r={r} fill={COLOR.surface} stroke={COLOR.excluded} strokeWidth={2} />
+                ) : other && !comparing ? (
+                  <circle cx={cx} cy={cy} r={4.5} fill={COLOR.surface} stroke={COLOR.main} strokeOpacity={0.55} strokeWidth={2} />
                 ) : (
                   <circle cx={cx} cy={cy} r={isHover ? r + 1.5 : r} fill={comparing ? COLOR.compare : COLOR.main} stroke={COLOR.surface} strokeWidth={2} />
                 )}
@@ -338,6 +344,7 @@ export default function PropertyChart({
               {Y.short}: <b className="text-[var(--foreground)]">{yKey === "costTier" ? "$".repeat(hovered.y) : hovered.y}</b> {Y.unit}
             </div>
             {hovered.s === "excluded" && <div className="text-[#8a2a1a]">✕ Excluded by your requirements</div>}
+            {hovered.s === "candidate" && hasOther && <div className="text-[var(--accent)]">★ Best match</div>}
             <div className="mt-0.5 text-[var(--subtle)]">Click for details</div>
           </div>
         )}

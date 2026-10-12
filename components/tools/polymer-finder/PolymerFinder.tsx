@@ -14,16 +14,17 @@ import {
 } from "./polymers";
 import PropertyChart, { type PointStatus } from "./PropertyChart";
 import { FIELD_NOTE_CATEGORIES, notesFor, type FieldNoteCategory } from "./fieldNotes";
+import { ALL_SOURCES, sourcesFor } from "./sources";
 import {
   MODEL_ID,
   getDocEmbeddings,
   keywordScores,
   loadEmbedder,
-  parseConstraints,
+  parseQuery,
   rank,
   semanticScores,
   type Check,
-  type Constraint,
+  type ParsedQuery,
   type Result,
 } from "./search";
 
@@ -162,6 +163,12 @@ function ResultCard({
         </ul>
       )}
 
+      {result.why.length > 0 && (
+        <p className="mt-2 text-[12px] text-[var(--accent)]">
+          <span className="font-semibold">Why it matches:</span> {result.why.join(" · ")}
+        </p>
+      )}
+
       <p className="mt-3 text-[14px] leading-[1.7] text-[var(--muted)]">{p.summary}</p>
 
       <div className="mt-3 flex flex-wrap items-center gap-5">
@@ -278,6 +285,18 @@ function WatchOuts({ p }: { p: Polymer }) {
           </li>
         ))}
       </ul>
+      <p className="mt-2 text-[12px] leading-[1.6] text-[#7a4010]">
+        <span className="font-semibold">Checked against: </span>
+        {sourcesFor(p.id).map((src, i) => (
+          <span key={src.url}>
+            {i > 0 && " · "}
+            <a href={src.url} target="_blank" rel="noreferrer" className="underline decoration-[#e0c49a] underline-offset-2 hover:text-[#5a3410]">
+              {src.label}
+            </a>
+          </span>
+        ))}
+        . Points without a named source are general engineering guidance.
+      </p>
     </div>
   );
 }
@@ -576,13 +595,56 @@ function CompareTable({ polymers, onRemove, onClear }: { polymers: Polymer[]; on
   );
 }
 
+function ChipRow({
+  title,
+  hint,
+  items,
+  disabled,
+  onToggle,
+  tone,
+}: {
+  title: string;
+  hint: string;
+  items: { id: string; label: string }[];
+  disabled: Set<string>;
+  onToggle: (id: string) => void;
+  tone: "solid" | "outline";
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="w-full text-[12px] font-semibold text-[var(--muted)] sm:w-auto sm:min-w-[96px]">
+        {title} <span className="font-normal text-[var(--subtle)]">· {hint}</span>
+      </span>
+      {items.map((c) => {
+        const on = !disabled.has(c.id);
+        const onCls =
+          tone === "solid"
+            ? "border-[var(--accent)] bg-[var(--accent)] text-white"
+            : "border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent)]";
+        return (
+          <button
+            key={c.id}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onToggle(c.id)}
+            className={`rounded-full border px-3 py-1 text-[13px] font-medium ${on ? onCls : "border-[var(--border)] bg-transparent text-[var(--faint)] line-through"}`}
+          >
+            {c.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ───────────────────────────── Main component ───────────────────────────── */
 
 export default function PolymerFinder() {
   const [input, setInput] = useState("");
-  const [query, setQuery] = useState("");
-  const [constraints, setConstraints] = useState<Constraint[]>([]);
+  const [parsed, setParsed] = useState<ParsedQuery | null>(null);
   const [disabled, setDisabled] = useState<Set<string>>(new Set());
+  const query = parsed?.text ?? "";
 
   const [modelStatus, setModelStatus] = useState<ModelStatus>("idle");
   const [modelPct, setModelPct] = useState<number | null>(null);
@@ -591,6 +653,7 @@ export default function PolymerFinder() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [compare, setCompare] = useState<string[]>([]);
   const [showExcluded, setShowExcluded] = useState(false);
+  const [showOthers, setShowOthers] = useState(false);
   const [showChart, setShowChart] = useState(true);
 
   // Download the model on first interaction, not on page load.
@@ -624,28 +687,27 @@ export default function PolymerFinder() {
   const runSearch = (q: string) => {
     const trimmed = q.trim();
     setInput(q);
-    setQuery(trimmed);
-    setConstraints(trimmed ? parseConstraints(trimmed) : []);
+    setParsed(trimmed ? parseQuery(trimmed) : null);
     setDisabled(new Set());
     setExpanded(null);
     setShowExcluded(false);
+    setShowOthers(false);
     if (trimmed) ensureModel();
   };
 
-  const activeConstraints = useMemo(() => constraints.filter((c) => !disabled.has(c.id)), [constraints, disabled]);
   const kw = useMemo(() => (query ? keywordScores(query) : null), [query]);
   const semScores = sem && sem.query === query ? sem.scores : null;
 
   const ranking = useMemo(() => {
-    if (!query || !kw) return null;
-    return rank(activeConstraints, kw, semScores);
-  }, [query, kw, semScores, activeConstraints]);
+    if (!parsed || !kw) return null;
+    return rank(parsed, disabled, kw, semScores);
+  }, [parsed, kw, semScores, disabled]);
 
   const browseList: Result[] = useMemo(
     () =>
       [...POLYMERS]
         .sort((a, b) => FAMILY_ORDER.indexOf(a.family) - FAMILY_ORDER.indexOf(b.family) || a.name.localeCompare(b.name))
-        .map((p) => ({ polymer: p, score: 0, relevance: 0, checks: [], warnings: 0 })),
+        .map((p) => ({ polymer: p, score: 0, relevance: 0, checks: [], warnings: 0, why: [] })),
     [],
   );
 
@@ -665,21 +727,46 @@ export default function PolymerFinder() {
     const st: Record<string, PointStatus> = {};
     for (const p of POLYMERS) st[p.id] = "neutral";
     if (ranking) {
-      for (const r of ranking.matches) st[r.polymer.id] = "candidate";
+      for (const r of ranking.best) st[r.polymer.id] = "candidate";
+      for (const r of ranking.others) st[r.polymer.id] = ranking.best.length ? "other" : "candidate";
       for (const r of ranking.excluded) st[r.polymer.id] = "excluded";
     }
     return st;
   }, [ranking]);
-  const chartLabels = ranking ? ranking.matches.slice(0, 3).map((r) => r.polymer.id) : [];
+  const chartLabels = ranking ? ranking.best.slice(0, 3).map((r) => r.polymer.id) : [];
 
   const openFromChart = (id: string) => {
     if (ranking?.excluded.some((r) => r.polymer.id === id)) setShowExcluded(true);
+    if (ranking?.others.some((r) => r.polymer.id === id)) setShowOthers(true);
     setExpanded(id);
     setTimeout(() => document.getElementById(`pf-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
   };
 
   const comparePolymers = compare.map((id) => POLYMERS.find((p) => p.id === id)).filter((p): p is Polymer => Boolean(p));
-  const searchMode = semScores ? "semantic" : "keyword";
+  const modeLabel = !ranking
+    ? ""
+    : ranking.mode === "understood"
+      ? `Ranked by what you asked for${semScores ? " · AI similarity breaks ties" : ""}`
+      : ranking.mode === "semantic"
+        ? "Nothing specific recognised · ranked by AI similarity"
+        : "Ranked by how well each meets your requirements";
+
+  const chartSection = (
+        <section className="mt-10" aria-label="Property chart">
+          <SectionHeading
+            right={
+              <button type="button" onClick={() => setShowChart((v) => !v)} aria-expanded={showChart} className="text-[13px] font-medium text-[var(--subtle)] hover:text-[var(--foreground)]">
+                {showChart ? "Hide chart" : "Show chart"}
+              </button>
+            }
+          >
+            Property map
+          </SectionHeading>
+          {showChart && (
+            <PropertyChart polymers={POLYMERS} status={chartStatus} compareIds={compare} labelIds={chartLabels} onSelect={openFromChart} />
+          )}
+        </section>
+  );
 
   const card = (r: Result, opts: { showRelevance: boolean; dimmed?: boolean }) => (
     <ResultCard
@@ -777,37 +864,53 @@ export default function PolymerFinder() {
         )}
       </form>
 
-      {/* Detected requirements */}
-      {query && (
+      {/* What the search understood */}
+      {parsed && (
         <section className="mt-6" aria-label="Detected requirements">
-          <div className="mb-2 text-[13px] font-semibold text-[var(--muted)]">
-            Requirements detected{constraints.length > 0 && <span className="font-normal text-[var(--subtle)]"> · click to turn off</span>}
-          </div>
-          {constraints.length === 0 ? (
+          {parsed.corrections.length > 0 && (
+            <p className="mb-3 text-[13px] text-[var(--muted)]">
+              Searching for{" "}
+              {parsed.corrections.map(([from, to], i) => (
+                <span key={from}>
+                  {i > 0 && ", "}
+                  <b className="text-[var(--foreground)]">{to}</b> <span className="text-[var(--subtle)]">(you typed &ldquo;{from}&rdquo;)</span>
+                </span>
+              ))}
+            </p>
+          )}
+          {parsed.constraints.length + parsed.signals.length === 0 ? (
             <p className="text-[14px] leading-[1.7] text-[var(--subtle)]">
-              None detected, so materials are ranked by your description only. Mention a temperature (e.g. &ldquo;150 °C&rdquo;),
-              sterilization, chemicals, transparency, flame rating or cost to filter.
+              {kw?.some((v) => v > 0)
+                ? "No requirements, applications or property preferences recognised; ranking by matching words."
+                : "Nothing specific recognised yet. Try an application (gear, O-ring, catheter, housing, lens), a property (stiff, lightweight, tough, tensile > 100 MPa), or a requirement (150 °C, autoclavable, resists IPA)."}
             </p>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {constraints.map((c) => {
-                const on = !disabled.has(c.id);
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => toggleConstraint(c.id)}
-                    className={`rounded-full border px-3 py-1 text-[13px] font-medium ${
-                      on
-                        ? "border-[var(--accent)] bg-[var(--accent)] text-white"
-                        : "border-[var(--border)] bg-transparent text-[var(--faint)] line-through"
-                    }`}
-                  >
-                    {c.label}
-                  </button>
-                );
-              })}
+            <div className="space-y-2">
+              <ChipRow
+                title="Requirements"
+                hint="must pass"
+                items={parsed.constraints.map((c) => ({ id: c.id, label: c.label }))}
+                disabled={disabled}
+                onToggle={toggleConstraint}
+                tone="solid"
+              />
+              <ChipRow
+                title="Application"
+                hint="ranks materials used this way"
+                items={parsed.signals.filter((x) => x.kind === "app")}
+                disabled={disabled}
+                onToggle={toggleConstraint}
+                tone="outline"
+              />
+              <ChipRow
+                title="Preferences"
+                hint="ranks by property data"
+                items={parsed.signals.filter((x) => x.kind === "pref")}
+                disabled={disabled}
+                onToggle={toggleConstraint}
+                tone="outline"
+              />
+              <p className="text-[12px] text-[var(--subtle)]">Click a chip to turn it off.</p>
             </div>
           )}
         </section>
@@ -815,38 +918,50 @@ export default function PolymerFinder() {
 
       {comparePolymers.length >= 2 && <CompareTable polymers={comparePolymers} onRemove={toggleCompare} onClear={() => setCompare([])} />}
 
-      {/* Property chart */}
-      <section className="mt-10" aria-label="Property chart">
-        <SectionHeading
-          right={
-            <button type="button" onClick={() => setShowChart((v) => !v)} aria-expanded={showChart} className="text-[13px] font-medium text-[var(--subtle)] hover:text-[var(--foreground)]">
-              {showChart ? "Hide chart" : "Show chart"}
-            </button>
-          }
-        >
-          Property map
-        </SectionHeading>
-        {showChart && (
-          <PropertyChart polymers={POLYMERS} status={chartStatus} compareIds={compare} labelIds={chartLabels} onSelect={openFromChart} />
-        )}
-      </section>
+      {!ranking && chartSection}
 
       {/* Results */}
       <section className="mt-10" aria-live="polite">
         {ranking ? (
           <>
-            <SectionHeading
-              right={<span className="text-[12px] text-[var(--subtle)]">{searchMode === "semantic" ? "Ranked by meaning + keywords" : "Ranked by keywords"}</span>}
-            >
-              {ranking.matches.length} candidate{ranking.matches.length === 1 ? "" : "s"}
+            <SectionHeading right={<span className="text-[12px] text-[var(--subtle)]">{modeLabel}</span>}>
+              {ranking.best.length > 0
+                ? `${ranking.best.length} best match${ranking.best.length === 1 ? "" : "es"}`
+                : ranking.others.length > 0
+                  ? "No strong matches"
+                  : "No matches"}
             </SectionHeading>
-            {ranking.matches.length === 0 ? (
+            {ranking.best.length > 0 ? (
+              <ol className="flex flex-col gap-4">{ranking.best.map((r) => card(r, { showRelevance: true }))}</ol>
+            ) : ranking.others.length > 0 ? (
+              <p className="text-[14px] leading-[1.7] text-[var(--muted)]">
+                Nothing stands out for that description. The materials below meet any requirements you gave; try adding an
+                application or a property to narrow them down.
+              </p>
+            ) : (
               <p className="text-[14px] leading-[1.7] text-[var(--muted)]">
                 No material meets every requirement. Turn a requirement off above, or open the excluded list below to see what
                 comes closest.
               </p>
-            ) : (
-              <ol className="flex flex-col gap-4">{ranking.matches.map((r) => card(r, { showRelevance: true }))}</ol>
+            )}
+
+            {chartSection}
+
+            {ranking.others.length > 0 && (
+              <div className="mt-8">
+                <button
+                  type="button"
+                  aria-expanded={showOthers || ranking.best.length === 0}
+                  onClick={() => setShowOthers((s) => !s)}
+                  className="mb-4 text-[14px] font-semibold text-[var(--subtle)] hover:text-[var(--foreground)]"
+                >
+                  {showOthers || ranking.best.length === 0 ? "▾" : "▸"} {ranking.others.length} other material
+                  {ranking.others.length === 1 ? "" : "s"} {ranking.mode === "understood" && parsed?.constraints.length ? "that also meet your requirements" : ""}
+                </button>
+                {(showOthers || ranking.best.length === 0) && (
+                  <ol className="flex flex-col gap-4">{ranking.others.map((r) => card(r, { showRelevance: false }))}</ol>
+                )}
+              </div>
             )}
 
             {ranking.excluded.length > 0 && (
@@ -896,6 +1011,18 @@ export default function PolymerFinder() {
           noted under &ldquo;Data basis&rdquo;; real grades vary widely. Chemical ratings assume room temperature and no applied
           stress. Confirm with supplier datasheets and test in your application.
         </p>
+        <details className="mt-2">
+          <summary className="cursor-pointer">References ({ALL_SOURCES.length})</summary>
+          <ul className="mt-2 space-y-1">
+            {ALL_SOURCES.map((src) => (
+              <li key={src.url}>
+                <a href={src.url} target="_blank" rel="noreferrer" className="text-[var(--accent)] hover:underline">
+                  {src.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
         <p className="mt-2">
           Search runs entirely in your browser using the Hugging Face model{" "}
           <a href={`https://huggingface.co/${MODEL_ID}`} className="text-[var(--accent)] hover:underline" target="_blank" rel="noreferrer">

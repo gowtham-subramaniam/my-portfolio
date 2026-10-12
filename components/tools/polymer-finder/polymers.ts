@@ -129,7 +129,7 @@ export const POLYMERS: Polymer[] = [
     watchOuts: [
       "High, direction-dependent shrinkage causes sink and warp: keep walls uniform and core out thick sections.",
       "Low surface energy: adhesives, inks and pad printing need flame, plasma or corona treatment first.",
-      "Standard grades embrittle and yellow after gamma; specify a radiation-stabilized grade for gamma-sterilized parts.",
+      "Natural PP tolerates only ~20 kGy before embrittling (Nordion); specify a radiation-stabilized homopolymer or a copolymer (~25–60 kGy) for gamma-sterilized parts.",
       "Homopolymer turns brittle near 0 °C; use impact copolymer for cold-chain or drop-tested parts.",
       "Living hinges must be flexed right out of the mold, while still warm, to orient the molecules.",
     ],
@@ -429,11 +429,12 @@ export const POLYMERS: Polymer[] = [
     uses: ['Clear housings and windows', 'Fluid connectors and manifolds', 'Safety shields', 'Diagnostic cartridges', 'Light covers'],
     processing: { shrinkPct: [0.5, 0.7], dryC: 120, dryH: 4, meltC: [280, 320], moldC: [80, 110] },
     watchOuts: [
-      "Must be dried to <0.02% moisture; wet resin gives splay and hydrolysis, and parts turn brittle.",
+      "Dry at 120 °C to ≤0.02% moisture (Covestro); wet resin gives splay, molecular-weight loss and brittle parts. Use a mold of at least 80 °C for low internal stress.",
       "Notch-sensitive: give internal corners a radius of at least 0.5× wall thickness.",
       "Stress cracks with many disinfectants, lubricants, threadlockers and some adhesives; screen every fluid that touches the part.",
       "High hoop stress from press-fit or heat-staked metal inserts causes cracking; use ultrasonic inserts with appropriate bosses.",
       "Repeated autoclaving hydrolyzes PC; it is not suitable for reusable steam-sterilized parts.",
+      "Notched impact falls sharply in the cold (one Makrolon grade: 55 → 12 kJ/m² at −30 °C); check drop tests at the lowest service temperature.",
     ],
     aka: ['Lexan', 'Makrolon', 'polycarbonate'],
     summary:
@@ -505,7 +506,7 @@ export const POLYMERS: Polymer[] = [
     uses: ['Light guides and lenses', 'Microfluidic chips (prototype)', 'Windows and displays', 'Optical cuvettes'],
     processing: { shrinkPct: [0.2, 0.8], dryC: 80, dryH: 3, meltC: [220, 260], moldC: [50, 80] },
     watchOuts: [
-      "Laser-cut and machined edges craze with IPA and solvents unless the part is annealed.",
+      "Laser-cut edges carry high residual stress and craze with IPA, cleaners or adhesives. Anneal first (Acrylite: 80 °C, 1 h per mm of thickness, minimum 2 h, then cool slowly).",
       "Brittle: avoid snap-fits and tight threaded joints.",
       "Solvent-bonded microfluidic chips can distort or craze channels; control solvent exposure and bond pressure.",
     ],
@@ -653,7 +654,7 @@ export const POLYMERS: Polymer[] = [
     uses: ['Gears and bushings', 'Cable ties', 'Fluid-handling under the hood', 'Structural brackets (glass-filled)'],
     processing: { shrinkPct: [0.8, 1.5], dryC: 80, dryH: 4, meltC: [230, 280], moldC: [60, 90] },
     watchOuts: [
-      "Parts absorb moisture after molding: dimensions grow ~0.5–1% and stiffness drops ~30–50%. Design and test with conditioned properties.",
+      "Parts absorb moisture after molding (~2% at 50% RH, up to ~8% saturated) and grow ~0.5–0.6%, while stiffness and strength drop. Design and test with conditioned properties.",
       "Measure dimensions after conditioning, not straight out of the mold.",
       "Attacked by acids and oxidizers, including bleach-based cleaners.",
       "Glass-filled: weld lines and fiber orientation dominate strength; place gates deliberately.",
@@ -691,7 +692,7 @@ export const POLYMERS: Polymer[] = [
     uses: ['Structural brackets and housings (GF)', 'Gears and cams', 'Connectors', 'Automotive engine-bay parts'],
     processing: { shrinkPct: [1.0, 2.0], dryC: 80, dryH: 4, meltC: [270, 300], moldC: [70, 100] },
     watchOuts: [
-      "Moisture uptake shifts dimensions and stiffness; specify tolerances in the conditioned state.",
+      "Moisture uptake (~2% at 50% RH) grows parts ~0.5% and lowers stiffness; specify tolerances in the conditioned state.",
       "Glass-filled grades warp from anisotropic shrinkage; use ribs and uniform walls.",
       "Weld-line strength in GF grades can be ~50–60% of the base material.",
     ],
@@ -767,9 +768,10 @@ export const POLYMERS: Polymer[] = [
     watchOuts: [
       "High shrinkage causes sinks and voids in thick sections; keep walls uniform and core out bosses.",
       "Never overheat or hold in the barrel: it decomposes and releases formaldehyde gas.",
-      "Incompatible with gamma sterilization (severe embrittlement); use EtO or choose another material.",
+      "Incompatible with gamma sterilization: tolerance is only ~5 kGy, far below typical 25–50 kGy doses (Nordion). Use EtO or choose another material.",
       "Practically impossible to glue or paint; use snap-fits, screws or welding.",
       "Attacked by acids and chlorine bleach; check cleaning agents.",
+      "Never run it after, or mixed with, PVC or flame-retardant resins; their acid gases degrade acetal rapidly. Purge the barrel thoroughly.",
     ],
     aka: ['acetal', 'polyoxymethylene', 'Delrin (homopolymer)', 'Celcon', 'Hostaform', 'Kepital'],
     summary:
@@ -878,11 +880,12 @@ export const POLYMERS: Polymer[] = [
     strengths: ['Transparent (amber) and hydrolytically stable at high temperature', 'Repeated steam sterilization', 'Rigid and creep-resistant'],
     limitations: ['Attacked by ketones, aromatics and chlorinated solvents', 'Notch-sensitive', 'Amber tint'],
     uses: ['Steam-sterilized medical components', 'Dialysis and filtration membranes', 'Hot-water fittings', 'Lab animal cages'],
-    processing: { shrinkPct: [0.6, 0.8], dryC: 140, dryH: 4, meltC: [330, 380], moldC: [120, 160] },
+    processing: { shrinkPct: [0.6, 0.8], dryC: 135, dryH: 4, meltC: [340, 380], moldC: [138, 160] },
     watchOuts: [
-      "Needs high mold temperatures (120–160 °C); low tool temperatures leave molded-in stress that later stress-cracks.",
+      "Needs high mold temperatures (Solvay: 138–160 °C); a cold tool leaves molded-in stress that later stress-cracks.",
       "Anneal stressed parts if they contact ketones, esters or aromatic solvents.",
-      "Dry to <0.05% moisture or parts show splay and bubbles.",
+      "Dry to ≤0.05% moisture (Solvay: 4 h at 135 °C) or parts show splay and bubbles.",
+      "Rated for several hundred steam cycles (Solvay: under 500); for reusable parts autoclaved more often, use PPSU or PEEK (1,000+ cycles).",
     ],
     aka: ['Udel', 'Ultrason S', 'polysulphone'],
     summary:
@@ -915,9 +918,9 @@ export const POLYMERS: Polymer[] = [
     strengths: ['Survives 1000+ autoclave cycles', 'Exceptional toughness for a high-temp plastic', 'Best disinfectant resistance among sulfones', 'Inherently flame retardant'],
     limitations: ['Expensive', 'Amber tint', 'Still sensitive to some ketones and chlorinated solvents'],
     uses: ['Reusable surgical instrument handles and trays', 'Sterilization cases', 'Baby bottles', 'Aircraft interiors', 'Plumbing manifolds'],
-    processing: { shrinkPct: [0.6, 0.8], dryC: 150, dryH: 4, meltC: [340, 390], moldC: [140, 180] },
+    processing: { shrinkPct: [0.6, 0.8], dryC: 150, dryH: 4, meltC: [360, 390], moldC: [138, 160] },
     watchOuts: [
-      "Very high processing and mold temperatures; needs capable presses and oil or electric tool heaters.",
+      "Needs hot tooling (Solvay: 138–160 °C mold, ~375 °C melt) and drying to ≤0.05% (4 h at 150 °C).",
       "Check cleaning-chemistry compatibility against the resin supplier's approved list.",
       "Colorants and pigments can change sterilization and chemical performance; qualify the colored grade.",
     ],
@@ -952,9 +955,9 @@ export const POLYMERS: Polymer[] = [
     strengths: ['High strength and stiffness to ~200 °C', 'Inherently flame retardant with low smoke', 'Transparent amber; excellent dimensional stability', 'Good dielectric properties'],
     limitations: ['Attacked by chlorinated solvents and strong bases', 'Notch-sensitive', 'High processing temperatures'],
     uses: ['Heated instrument components', 'Aircraft interior parts', 'Electrical connectors', 'Reusable medical devices', 'High-temp FDM tooling'],
-    processing: { shrinkPct: [0.5, 0.7], dryC: 150, dryH: 5, meltC: [340, 400], moldC: [135, 165] },
+    processing: { shrinkPct: [0.5, 0.7], dryC: 150, dryH: 5, meltC: [350, 400], moldC: [135, 163] },
     watchOuts: [
-      "Requires very high mold temperatures and thorough drying.",
+      "Requires hot molds (SABIC: 135–163 °C) and drying to ≤0.02% (4–6 h at ~150 °C).",
       "Stress-cracks with chlorinated solvents and some cleaners; check every fluid that touches the part.",
       "Notch-sensitive: radius all internal corners.",
       "FDM printing needs a heated chamber (~200 °C) for good layer bonding.",
@@ -994,7 +997,7 @@ export const POLYMERS: Polymer[] = [
     watchOuts: [
       "Very low melt viscosity flashes at tight parting lines; tooling must be precise and well vented.",
       "Glass fill is abrasive; use hardened tool steel.",
-      "Cold molds leave an amorphous skin that crystallizes and shrinks later in service; keep the mold above ~135 °C.",
+      "Mold above ~135 °C: cooler tools give low crystallinity and extra post-mold shrinkage in hot service (Solvay measured 0.52% vs 0.10% transverse after 24 h at 232 °C).",
       "Brittle: avoid snap-fits and press fits.",
     ],
     aka: ['Ryton', 'Fortron', 'polyphenylene sulphide'],
@@ -1028,12 +1031,13 @@ export const POLYMERS: Polymer[] = [
     strengths: ['Continuous use to ~250 °C', 'Outstanding chemical, hydrolysis and radiation resistance', 'Excellent wear, fatigue and creep', 'Implant-grade biocompatibility'],
     limitations: ['Very expensive', 'High processing temperatures', 'Attacked by concentrated sulfuric and nitric acid'],
     uses: ['Spinal and orthopedic implants', 'HPLC tubing and fittings', 'Valve seats, seals and bearings', 'Semiconductor wafer handling', 'Aerospace brackets'],
-    processing: { shrinkPct: [1.0, 1.5], dryC: 150, dryH: 3, meltC: [360, 400], moldC: [170, 200] },
+    processing: { shrinkPct: [1.0, 1.8], dryC: 150, dryH: 3, meltC: [360, 400], moldC: [170, 200] },
     watchOuts: [
-      "Mold temperature must exceed ~170 °C for full crystallinity; otherwise parts shrink and lose properties in service.",
+      "Tool surface must reach at least 170 °C for normal crystallinity (Victrex); dark or translucent patches signal cold spots and amorphous regions.",
       "Anneal machined parts from stock for precision features, or they move after cutting.",
       "Material cost dominates: machining scrap is expensive, so consider near-net-shape molding at volume.",
       "FDM needs a ~400 °C nozzle and a heated chamber; printed parts are weaker in Z.",
+      "Preheat metal inserts: cold inserts lower the crystallinity of the polymer around them (Victrex).",
     ],
     aka: ['Victrex', 'KetaSpire', 'Vestakeep', 'polyetheretherketone'],
     summary:
@@ -1056,7 +1060,7 @@ export const POLYMERS: Polymer[] = [
     tmC: 300,
     waterAbsPct: 0.02,
     transparency: 'opaque',
-    sterilization: { autoclave: 'yes', gamma: 'yes', eto: 'yes' },
+    sterilization: { autoclave: 'yes', gamma: 'limited', eto: 'yes' },
     chem: { acids: 'E', bases: 'F', alcohols: 'E', bleach: 'G', oils: 'E', ketones: 'E', aromatics: 'E' },
     ul94: 'V-0',
     costTier: 4,
@@ -1071,6 +1075,7 @@ export const POLYMERS: Polymer[] = [
       "Weld (knit) lines are very weak; gate so they fall outside load-bearing and sealing areas.",
       "Highly anisotropic: strength and shrinkage depend strongly on flow direction.",
       "Surfaces can fibrillate under abrasion; consider this for sliding contact.",
+      "Radiation tolerance is listed at only ~5–50 kGy (Nordion); qualify gamma sterilization at your dose.",
     ],
     aka: ['Vectra', 'Zenite', 'Laperos', 'Xydar'],
     summary:
@@ -1144,10 +1149,11 @@ export const POLYMERS: Polymer[] = [
     uses: ['Seals, gaskets and valve seats', 'Chemical-resistant liners', 'Low-friction bearings and slides', 'Wire insulation', 'Non-stick coatings'],
     processing: { shrinkPct: null, dryC: null, dryH: null, meltC: null, moldC: null, note: "Compression-molded and sintered, then machined; not melt-processable." },
     watchOuts: [
-      "Cold-flows under load: seals need spring energizers or backup rings, or use filled PTFE (glass, carbon, bronze).",
+      "Cold-flows under load: seals need spring energizers or backup rings, or use filled PTFE (glass or bronze fillers reduce cold flow, per Daikin).",
       "Very high thermal expansion, with a ~1% volume change near 19 °C; size precision parts at use temperature.",
       "Bonding requires sodium etching first.",
       "Heating above ~400 °C releases toxic fumes (polymer fume fever); control machining heat and never smoke near PTFE dust.",
+      "Gamma doses as low as ~5 kGy break it down to powder (Nordion); never gamma-sterilize PTFE parts.",
     ],
     aka: ['Teflon', 'PTFE', 'fluoropolymer'],
     summary:
@@ -1265,6 +1271,7 @@ export const POLYMERS: Polymer[] = [
       "Post-cure parts to drive off volatiles and cut extractables, especially for medical use.",
       "Low tear strength: sharp corners and notches tear during assembly. Radius everything.",
       "High gas and vapor permeability; not a moisture or gas barrier.",
+      "Degraded by superheated steam above ~121 °C, acids and alkalis (Parker); qualify cycle counts for reusable autoclaved parts.",
     ],
     aka: ['silicone', 'LSR', 'VMQ', 'PDMS', 'Silastic'],
     summary:
@@ -1288,7 +1295,7 @@ export const POLYMERS: Polymer[] = [
     tmC: null,
     waterAbsPct: 0.1,
     transparency: 'opaque',
-    sterilization: { autoclave: 'yes', gamma: 'limited', eto: 'yes' },
+    sterilization: { autoclave: 'yes', gamma: 'yes', eto: 'yes' },
     chem: { acids: 'G', bases: 'E', alcohols: 'E', bleach: 'G', oils: 'P', ketones: 'G', aromatics: 'P' },
     ul94: 'HB',
     costTier: 1,
@@ -1338,8 +1345,8 @@ export const POLYMERS: Polymer[] = [
     uses: ['O-rings and seals for fuel, oil and solvent service', 'Chemical-process valve seals', 'Semiconductor equipment seals', 'Shaft seals'],
     processing: { shrinkPct: [2.0, 4.0], dryC: null, dryH: null, meltC: [170, 190], moldC: [170, 190], note: "Molded then oven post-cured." },
     watchOuts: [
-      "Standard grades fail in hot water and steam, ketones, amines and strong bases; use specialty grades or FFKM.",
-      "Stiffens below about −15 °C (standard grades); use low-temperature grades for cold service.",
+      "Standard grades are not for superheated steam, amines/ammonia, strong alkalis, glycol brake fluid or low-molecular organic acids such as formic and acetic (Parker); ketones also swell them.",
+      "Limited cold flexibility: about −15 to −18 °C in dynamic service and about −26 °C static for standard compounds (Parker).",
       "Mold shrinkage is higher than NBR's; O-ring tooling cut for NBR gives undersized FKM parts.",
       "Cost is several times NBR's; use where oil, fuel, heat or solvent resistance is actually needed.",
     ],
@@ -1526,12 +1533,14 @@ export const POLYMERS: Polymer[] = [
     aka: ['Delrin', 'Tenac', 'polyoxymethylene homopolymer', 'acetal'],
     summary:
       'Stiffer, stronger form of acetal for gears, springs and precision mechanisms. Better mechanically than the copolymer but less resistant to hot water and bases.',
-    processing: { shrinkPct: [1.8, 2.2], dryC: null, dryH: null, meltC: [200, 220], moldC: [80, 100] },
+    processing: { shrinkPct: [1.8, 2.2], dryC: null, dryH: null, meltC: [210, 220], moldC: [80, 100] },
     watchOuts: [
       "Thick rod and plate can have centerline porosity; use copolymer stock for thick machined or pressure-holding parts.",
       "Never overheat in the barrel: it releases formaldehyde.",
       "Degrades under gamma radiation; sterilize with EtO.",
       "Less resistant to hot water and alkaline cleaners than copolymer; choose copolymer for washdown parts.",
+      "Never run it after, or mixed with, PVC or flame-retardant resins: the HCl/HBr they release degrades acetal rapidly (DuPont). Purge the barrel thoroughly.",
+      "Pack thick sections fully: gate into the thickest area with a gate at least half the wall thickness. Under-packing causes voids and can cut mechanical performance by up to 30% (DuPont).",
     ],
   },
   {
@@ -1604,7 +1613,7 @@ export const POLYMERS: Polymer[] = [
     watchOuts: [
       "Design with conditioned (moist) properties; dry-as-molded datasheet values overstate stiffness by ~30%.",
       "Fiber orientation sets shrinkage and strength: shrinkage is ~0.3% along flow and up to ~1% across it, so flat parts warp.",
-      "Weld lines can drop to ~50–60% strength; keep them away from screw bosses and snap-fits.",
+      "Weld lines can keep as little as a third to a half of the base strength (one study: 34% for a 30% glass compound); keep them away from screw bosses and snap-fits.",
       "Glass is abrasive: use hardened tool steel and expect gate wear.",
     ],
   },
@@ -1642,7 +1651,7 @@ export const POLYMERS: Polymer[] = [
     watchOuts: [
       "Specify hydrolysis-resistant grades for 85 °C/85% RH testing or automotive under-hood service.",
       "Warpage from fiber orientation; simulate fill and add ribs for flatness.",
-      "Weld lines are weak; gate to keep them away from latches and press-fit pins.",
+      "Weld lines in glass-filled grades can drop to roughly a third to a half of base strength; gate to keep them away from latches and press-fit pins.",
     ],
   },
 
@@ -1677,9 +1686,9 @@ export const POLYMERS: Polymer[] = [
     aka: ['Ultrason E', 'Veradel', 'polyether sulphone', 'PESU'],
     summary:
       'Transparent amber sulfone with the highest temperature rating of the family. Used for membranes, sterilizable medical parts and hot electrical components.',
-    processing: { shrinkPct: [0.6, 0.8], dryC: 150, dryH: 4, meltC: [340, 380], moldC: [140, 180] },
+    processing: { shrinkPct: [0.6, 0.8], dryC: 150, dryH: 4, meltC: [350, 380], moldC: [138, 160] },
     watchOuts: [
-      "Dry thoroughly; it absorbs more water than PSU.",
+      "Dry to ≤0.05% moisture (Solvay: 4 h at 150 °C); PES absorbs more water than PSU.",
       "Molded-in stress plus ketones or esters causes cracking; anneal and screen fluids.",
       "Radius internal corners; it is notch-sensitive.",
     ],
@@ -1787,10 +1796,10 @@ export const POLYMERS: Polymer[] = [
     aka: ['Amodel', 'Zytel HTN', 'Grivory HT', 'high-temperature nylon'],
     summary:
       'High-temperature nylon that holds stiffness above 150 °C and absorbs far less moisture than PA66. Used for coolant parts, LED reflectors and reflow-soldered connectors.',
-    processing: { shrinkPct: [0.2, 0.8], dryC: 100, dryH: 4, meltC: [320, 340], moldC: [135, 165] },
+    processing: { shrinkPct: [0.2, 0.8], dryC: 120, dryH: 4, meltC: [320, 340], moldC: [135, 165] },
     watchOuts: [
-      "Mold temperature must be above ~135 °C (oil-heated) for full crystallinity; cold molds give post-mold shrinkage and blistering in reflow.",
-      "Dry the resin; moist PPA blisters in reflow soldering.",
+      "Many grades need tool temperatures above 135 °C (oil-heated) while others run above 80 °C; check the grade's molding guide (Solvay Amodel).",
+      "Dry to 0.03–0.06% moisture (Solvay: 4 h at 120 °C, max 135 °C); wet resin drools, foams and loses properties. Molded parts that absorb moisture can also blister in lead-free reflow.",
       "Warps from glass orientation, as with other GF grades.",
     ],
   },
@@ -1860,7 +1869,7 @@ export const POLYMERS: Polymer[] = [
     aka: ['Victrex 450CA30', 'KetaSpire CF30', 'CFR-PEEK', 'carbon PEEK'],
     summary:
       'Carbon-reinforced PEEK with metal-like stiffness at low weight. Used for aerospace brackets, wear parts and radiolucent orthopedic implants; expensive and anisotropic.',
-    processing: { shrinkPct: [0.1, 0.5], dryC: 150, dryH: 3, meltC: [370, 400], moldC: [180, 210] },
+    processing: { shrinkPct: [0.0, 0.6], dryC: 150, dryH: 3, meltC: [370, 400], moldC: [180, 210] },
     watchOuts: [
       "Properties along the fiber direction can be 2–3× those across it; know the fiber orientation at critical features.",
       "Carbon fiber is conductive; check for galvanic coupling with aluminum and for electrical isolation needs.",
@@ -1997,7 +2006,7 @@ export const POLYMERS: Polymer[] = [
     tmC: 211,
     waterAbsPct: 0.01,
     transparency: 'clear',
-    sterilization: { autoclave: 'limited', gamma: 'limited', eto: 'yes' },
+    sterilization: { autoclave: 'limited', gamma: 'yes', eto: 'yes' },
     chem: { acids: 'E', bases: 'E', alcohols: 'E', bleach: 'E', oils: 'E', ketones: 'G', aromatics: 'F' },
     ul94: 'V-0',
     costTier: 5,
@@ -2055,6 +2064,7 @@ export const POLYMERS: Polymer[] = [
       "Acrylonitrile content trades oil resistance against low-temperature flexibility; specify ACN level for cold service.",
       "Glycol-based brake fluid attacks it; use EPDM.",
       "Check the O-ring compound against lubricants too, not just the process fluid.",
+      "Also not for strong acids, high-aromatic fuels or chlorinated hydrocarbons (Parker).",
     ],
   },
   {
@@ -2092,6 +2102,7 @@ export const POLYMERS: Polymer[] = [
     watchOuts: [
       "Check compatibility with amine-additive oils and coolants.",
       "Cost is 3–5× NBR's; justify it with temperature or ozone exposure.",
+      "Not for strong acids or polar solvents (ketones, esters, ethers) (Parker).",
     ],
   },
   {
@@ -2130,6 +2141,7 @@ export const POLYMERS: Polymer[] = [
       "Reserve for cases where FKM has actually failed or is predicted to; the cost difference is huge.",
       "Large thermal expansion at high temperature: check gland fill to avoid extrusion.",
       "Grades differ a lot (steam, amines, plasma); pick the grade for the specific chemistry.",
+      "Not compatible with fluorinated refrigerants (R11, R12, R113…) or perfluorinated (PFPE) lubricants (Parker).",
     ],
   },
   {
@@ -2167,6 +2179,7 @@ export const POLYMERS: Polymer[] = [
     watchOuts: [
       "A jack of all trades: for heavy oil exposure use NBR; for steam and weather use EPDM.",
       "Crystallizes and stiffens during long cold storage; check low-temperature sealing.",
+      "Not for aromatic or chlorinated solvents, or ketones and esters; only limited with mineral oils and fuels (Parker).",
     ],
   },
   {
@@ -2187,7 +2200,7 @@ export const POLYMERS: Polymer[] = [
     tmC: null,
     waterAbsPct: 0.1,
     transparency: 'opaque',
-    sterilization: { autoclave: 'yes', gamma: 'no', eto: 'yes' },
+    sterilization: { autoclave: 'yes', gamma: 'limited', eto: 'yes' },
     chem: { acids: 'G', bases: 'E', alcohols: 'E', bleach: 'G', oils: 'P', ketones: 'G', aromatics: 'P' },
     ul94: 'HB',
     costTier: 2,
@@ -2195,16 +2208,17 @@ export const POLYMERS: Polymer[] = [
     food: true,
     processes: ['Compression molding', 'Transfer molding'],
     strengths: ['Lowest gas and moisture permeability of common rubbers', 'Excellent vibration damping', 'Good with steam, polar solvents and ketones'],
-    limitations: ['Swells badly in oils and hydrocarbons', 'Degrades under gamma radiation', 'Low resilience'],
+    limitations: ['Swells badly in oils and hydrocarbons', 'Low radiation tolerance (~50 kGy)', 'Low resilience'],
     uses: ['Vial and syringe stoppers', 'Plunger seals', 'Inner tubes and bladders', 'Vibration dampers', 'Tank linings'],
     aka: ['butyl', 'IIR', 'bromobutyl', 'chlorobutyl', 'BIIR', 'CIIR'],
     summary:
-      'Rubber with the lowest gas and moisture permeability, which is why it is the standard for vial stoppers and syringe plungers. Swells in oils and is not gamma compatible.',
+      'Rubber with the lowest gas and moisture permeability, which is why it is the standard for vial stoppers and syringe plungers. Swells in oils and has limited gamma tolerance.',
     processing: { shrinkPct: [1.5, 3.0], dryC: null, dryH: null, meltC: [160, 180], moldC: [160, 180], note: 'Vulcanized in a heated mold; pharma grades are washed and often coated.' },
     watchOuts: [
       "Extractables and leachables matter for drug contact; use coated or laminated pharma grades and test.",
-      "Gamma sterilization breaks it down; use steam or EtO.",
+      "Radiation tolerance is low (~50 kGy per Nordion); prefer steam or EtO, or qualify the gamma dose carefully.",
       "Low resilience: slow recovery after compression can matter for reseal performance.",
+      "Not for mineral oils, greases, fuels or chlorinated hydrocarbons (Parker).",
     ],
   },
   {
@@ -2238,10 +2252,10 @@ export const POLYMERS: Polymer[] = [
     aka: ['Santoprene', 'Sarlink', 'TPE-V', 'TPE', 'thermoplastic elastomer'],
     summary:
       'Thermoplastic elastomer based on EPDM in PP that seals like rubber but molds like plastic. Used for seals, grips and overmolds on PP; watch compression set at temperature.',
-    processing: { shrinkPct: [1.0, 2.5], dryC: 80, dryH: 3, meltC: [190, 230], moldC: [20, 60] },
+    processing: { shrinkPct: [1.0, 2.5], dryC: 80, dryH: 3, meltC: [200, 230], moldC: [10, 50] },
     watchOuts: [
-      "Compression set rises sharply above ~70 °C; test sealing force over time at temperature.",
-      "Some grades are hygroscopic; dry before molding to avoid splay.",
+      "Compression set rises with temperature (one 87A Santoprene grade: 36% after 22 h at 70 °C, 44% after 70 h at 125 °C); test sealing force over time at temperature.",
+      "Dry before molding (80 °C for 3 h to ≤0.08% moisture for a typical Santoprene grade) to avoid splay.",
       "Overmold adhesion to PC, ABS or nylon needs grade-specific TPEs; standard TPV only bonds to PP.",
     ],
   },
@@ -2278,8 +2292,8 @@ export const POLYMERS: Polymer[] = [
       'Engineering TPE with excellent flex-fatigue and oil resistance. Used for boots, bellows, diaphragms and molded-in springs; hydrolyzes in hot water unless stabilized.',
     processing: { shrinkPct: [0.5, 1.8], dryC: 100, dryH: 3, meltC: [220, 250], moldC: [30, 60] },
     watchOuts: [
-      "Drying is critical; wet resin degrades and loses fatigue life.",
-      "Specify hydrolysis-stabilized grades for warm, wet or steam exposure.",
+      "Dry to ≤0.10% moisture (DuPont: 2–3 h at 100 °C in dehumidified air); wet resin hydrolyzes in the melt and parts turn brittle.",
+      "For long-term hot water or steam, use a hydrolysis-stabilized grade or a stabilizer concentrate (DuPont offers Hytrel 10MS).",
     ],
   },
   {
@@ -2313,9 +2327,9 @@ export const POLYMERS: Polymer[] = [
     aka: ['Pebax', 'Vestamid E', 'TPE-A', 'TPA'],
     summary:
       'Light, resilient polyamide elastomer available across a wide hardness range. Standard for catheter shafts and balloons; also used in high-rebound shoe soles.',
-    processing: { shrinkPct: [0.5, 1.5], dryC: 70, dryH: 4, meltC: [200, 260], moldC: [20, 40] },
+    processing: { shrinkPct: [0.5, 1.5], dryC: 75, dryH: 5, meltC: [200, 260], moldC: [20, 60] },
     watchOuts: [
-      "Dry before extrusion: moisture causes bubbles and inconsistent tubing walls.",
+      "Dry before processing (Arkema: 70–80 °C for 4–6 h if bags were open more than 2 h); moisture causes bubbles and uneven tubing walls.",
       "Not autoclavable; sterilize with EtO or gamma.",
       "Properties shift with moisture; condition samples before mechanical testing.",
     ],
