@@ -27,6 +27,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: "https://www.gowthamsubramaniam.com/tools",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: "https://www.gowthamsubramaniam.com/tools/polymer-finder",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
       url: "https://www.gowthamsubramaniam.com/contact",
       lastModified: new Date(),
       changeFrequency: "yearly",

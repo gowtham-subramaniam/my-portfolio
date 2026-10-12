@@ -80,3 +80,14 @@ body {
     align-items: flex-start !important;
   }
 }
+/* Five nav links on small phones */
+@media (max-width: 420px) {
+  .nav-logo {
+    height: 40px !important;
+  }
+
+  .nav-links a {
+    font-size: 12.5px !important;
+    padding: 4px 5px !important;
+  }
+}
