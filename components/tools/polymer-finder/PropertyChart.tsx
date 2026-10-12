@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Polymer } from "./polymers";
+import type { ChartLimit } from "./search";
 
 /* ───────────────────────────── Axes ───────────────────────────── */
 
-type AxisKey = "contUseC" | "hdtC" | "tensileMPa" | "modulusGPa" | "density" | "elongationPct" | "waterAbsPct" | "costTier";
+export type AxisKey = "contUseC" | "hdtC" | "tensileMPa" | "modulusGPa" | "density" | "elongationPct" | "waterAbsPct" | "costTier";
 
 interface AxisDef {
   label: string;
@@ -87,6 +88,9 @@ export default function PropertyChart({
   compareIds,
   labelIds,
   onSelect,
+  initialX = "contUseC",
+  initialY = "tensileMPa",
+  limits = [],
 }: {
   polymers: Polymer[];
   status: Record<string, PointStatus>;
@@ -94,9 +98,14 @@ export default function PropertyChart({
   /** Points to label directly (in addition to compared ones) */
   labelIds: string[];
   onSelect: (id: string) => void;
+  /** Axes to start on (the parent remounts the chart when the search focus changes) */
+  initialX?: AxisKey;
+  initialY?: AxisKey;
+  /** Numeric requirements from the search, drawn as threshold lines */
+  limits?: ChartLimit[];
 }) {
-  const [xKey, setXKey] = useState<AxisKey>("contUseC");
-  const [yKey, setYKey] = useState<AxisKey>("tensileMPa");
+  const [xKey, setXKey] = useState<AxisKey>(initialX);
+  const [yKey, setYKey] = useState<AxisKey>(initialY);
   const [showExcluded, setShowExcluded] = useState(true);
   const [hover, setHover] = useState<{ id: string; left: number; top: number; flip: boolean } | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -128,8 +137,13 @@ export default function PropertyChart({
 
   const visible = data.pts.filter((d) => showExcluded || d.s !== "excluded");
   const scaleBasis = data.pts.length ? data.pts : [{ x: 1, y: 1 }];
-  const xs = makeScale(scaleBasis.map((d) => d.x), X.log, M.left, W - M.right);
-  const ys = makeScale(scaleBasis.map((d) => d.y), Y.log, H - M.bottom, M.top);
+  const xLimits = limits.filter((l) => l.axis === xKey);
+  const yLimits = limits.filter((l) => l.axis === yKey);
+  // Keep every limit line inside the plotted range.
+  const xs = makeScale([...scaleBasis.map((d) => d.x), ...xLimits.map((l) => l.value)], X.log, M.left, W - M.right);
+  const ys = makeScale([...scaleBasis.map((d) => d.y), ...yLimits.map((l) => l.value)], Y.log, H - M.bottom, M.top);
+  const plotted = new Set([xKey, yKey]);
+  const offChart = limits.filter((l) => !plotted.has(l.axis));
 
   // Draw order: excluded under, then main, then compared on top.
   const rank = (d: { p: Polymer; s: PointStatus }) => (compareIds.includes(d.p.id) ? 4 : d.s === "excluded" ? 1 : d.s === "other" ? 2 : 3);
@@ -259,6 +273,36 @@ export default function PropertyChart({
             </text>
           )}
 
+          {/* Requirement limits: shade the failing side, dashed line at the limit */}
+          {xLimits.map((l) => {
+            const x = xs.f(l.value);
+            const failX = l.op === ">=" ? M.left : x;
+            const failW = l.op === ">=" ? x - M.left : W - M.right - x;
+            return (
+              <g key={`lx-${l.label}`} pointerEvents="none">
+                <rect x={failX} y={M.top} width={Math.max(0, failW)} height={H - M.bottom - M.top} fill="#8a2a1a" fillOpacity={0.05} />
+                <line x1={x} x2={x} y1={M.top} y2={H - M.bottom} stroke="#8a2a1a" strokeWidth={1.5} strokeDasharray="5 4" />
+                <text x={x + (l.op === ">=" ? 5 : -5)} y={M.top + 12} textAnchor={l.op === ">=" ? "start" : "end"} fontSize={11} fontWeight={600} fill="#8a2a1a">
+                  {l.label}
+                </text>
+              </g>
+            );
+          })}
+          {yLimits.map((l) => {
+            const y = ys.f(l.value);
+            const failY = l.op === ">=" ? y : M.top;
+            const failH = l.op === ">=" ? H - M.bottom - y : y - M.top;
+            return (
+              <g key={`ly-${l.label}`} pointerEvents="none">
+                <rect x={M.left} y={failY} width={W - M.right - M.left} height={Math.max(0, failH)} fill="#8a2a1a" fillOpacity={0.05} />
+                <line x1={M.left} x2={W - M.right} y1={y} y2={y} stroke="#8a2a1a" strokeWidth={1.5} strokeDasharray="5 4" />
+                <text x={W - M.right - 4} y={y + (l.op === ">=" ? -5 : 13)} textAnchor="end" fontSize={11} fontWeight={600} fill="#8a2a1a">
+                  {l.label}
+                </text>
+              </g>
+            );
+          })}
+
           {/* Points */}
           {ordered.map((d) => {
             const { cx, cy } = pos.get(d.p.id)!;
@@ -351,6 +395,12 @@ export default function PropertyChart({
       </div>
 
       <p className="mt-2 text-[12px] leading-[1.6] text-[var(--subtle)]">
+        {limits.length > 0 && (
+          <>
+            Dashed lines mark your numeric requirements; the shaded side fails.
+            {offChart.length > 0 && ` Not on these axes: ${offChart.map((l) => `${AXES[l.axis].short} ${l.label}`).join(", ")}.`}{" "}
+          </>
+        )}
         Typical values for a representative grade. Click a point to open its details.
         {data.missing > 0 && ` ${data.missing} material${data.missing === 1 ? "" : "s"} without data on these axes (e.g. elastomers have no tensile modulus or HDT) not shown.`}
       </p>

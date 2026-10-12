@@ -59,6 +59,7 @@ export type ConstraintKind =
   | 'moisture'
   | 'injection'
   | 'print3d'
+  | 'uv'
   | 'prop';
 
 export type NumericProp = 'tensileMPa' | 'modulusGPa' | 'density' | 'elongationPct' | 'hdtC' | 'waterAbsPct';
@@ -89,6 +90,8 @@ export interface Check {
   constraint: Constraint;
   status: CheckStatus;
   detail: string;
+  /** How well it passes: 1 = excellent, lower = merely good (used to order materials that all pass) */
+  grade?: number;
 }
 
 const CHEM_PATTERNS: { key: ChemKey; re: RegExp }[] = [
@@ -104,7 +107,8 @@ const CHEM_PATTERNS: { key: ChemKey; re: RegExp }[] = [
 const SIMPLE_PATTERNS: { kind: ConstraintKind; re: RegExp; label: string }[] = [
   { kind: 'clear', re: /\b(transparent|clear|see[- ]through|optically clear)\b/i, label: 'Transparent' },
   { kind: 'autoclave', re: /\b(autoclav\w*|steam[- ]?steril\w*|steam)\b/i, label: 'Autoclavable' },
-  { kind: 'gamma', re: /\b(gamma|e-?beam|electron beam|irradiat\w*|radiation[- ]steril\w*)\b/i, label: 'Gamma / e-beam stable' },
+  { kind: 'gamma', re: /\b(gamma|e-?beam|electron beam|irradiat\w*|radiation)\b/i, label: 'Gamma / e-beam stable' },
+  { kind: 'uv', re: /\b(uv|ultra[- ]?violet|sun ?light|sun|outdoors?|weather\w*|ozone)\b/i, label: 'UV / outdoor resistant' },
   { kind: 'eto', re: /\b(eto|ethylene oxide)\b/i, label: 'EtO compatible' },
   { kind: 'flame', re: /\b(flame[- ]?(retardant|rated|resistant)|fire[- ]?(retardant|resistant|rated)|ul ?94|v-?0)\b/i, label: 'Flame retardant (UL94 V-0)' },
   { kind: 'food', re: /\b(food|fda|potable|drinking water|nsf)\b/i, label: 'Food-contact grades' },
@@ -226,7 +230,7 @@ export function checkConstraint(p: Polymer, c: Constraint): Check {
       const k = c.chem as ChemKey;
       const v = p.chem[k];
       const name = lowerFirst(CHEM_LABELS[k]);
-      if (v === 'E' || v === 'G') return r('pass', `${v === 'E' ? 'Excellent' : 'Good'} vs ${name}`);
+      if (v === 'E' || v === 'G') return { ...r('pass', `${v === 'E' ? 'Excellent' : 'Good'} vs ${name}`), grade: v === 'E' ? 1 : 0.7 };
       if (v === 'F') return r('warn', `Fair vs ${name}; test under stress`);
       return r('fail', `Poor vs ${name}`);
     }
@@ -251,6 +255,10 @@ export function checkConstraint(p: Polymer, c: Constraint): Check {
       return p.processes.some((x) => /injection/i.test(x)) ? r('pass', 'Injection moldable') : r('fail', 'Not conventionally injection moldable');
     case 'print3d':
       return p.processes.some((x) => /3d printing|sls|mjf/i.test(x)) ? r('pass', 'Printable filament / powder exists') : r('fail', 'Not commonly 3D printed');
+    case 'uv':
+      if (p.uv === 'E' || p.uv === 'G') return { ...r('pass', `${p.uv === 'E' ? 'Excellent' : 'Good'} UV / weathering resistance`), grade: p.uv === 'E' ? 1 : 0.7 };
+      if (p.uv === 'F') return r('warn', 'Fair UV resistance; use a UV-stabilized or black grade outdoors');
+      return r('fail', 'Poor UV resistance unless UV-stabilized or carbon-black filled');
     case 'prop': {
       const prop = c.prop as NumericProp;
       const meta = PROP_META[prop];
@@ -363,6 +371,13 @@ const P_ELONG = pct((p) => Math.log10(p.elongationPct));
 const P_LOWSHRINK = pct(avgShrink, true);
 const P_DRY = pct((p) => p.waterAbsPct, true);
 
+// Strengths and uses only: summaries mix positives and negatives ("hydrolyzes in hot water").
+const strengthsText = (p: Polymer) => lc([...p.strengths, ...p.uses].join(' | '));
+const weakText = (p: Polymer) => lc([...p.limitations, ...p.watchOuts].join(' | '));
+/** 1 if the material's strengths mention it, 0 if its limitations do, otherwise a neutral middle value. */
+const textPref = (pos: RegExp, neg: RegExp | null, neutral = 0.35) =>
+  POLYMERS.map((p) => (pos.test(strengthsText(p)) ? 1 : neg && neg.test(weakText(p)) ? 0 : neutral));
+
 const PREFS: Record<string, PrefDef> = {
   stiff: { label: 'High stiffness', q: /\b(stiff\w*|rigid\w*|high[- ]modulus)\b/, score: pct((p) => p.modulusGPa) },
   strong: { label: 'High strength', q: /\b(strong|strength|high[- ]strength|load[- ]bearing)\b/, score: pct((p) => p.tensileMPa) },
@@ -395,6 +410,39 @@ const PREFS: Record<string, PrefDef> = {
     score: POLYMERS.map((_, i) => (P_LOWSHRINK[i] + P_DRY[i]) / 2),
   },
   cheapPref: { label: 'Lower cost', q: /\b(cost[- ]effective|affordable|cheaper|lower cost)\b/, score: pct((p) => p.costTier, true) },
+  // Set by parseQuery when two preferences combine into a ratio.
+  stiffLight: { label: 'High stiffness-to-weight', q: /$^/, score: pct((p) => (p.modulusGPa === null ? null : p.modulusGPa / p.density)) },
+  strongLight: { label: 'High strength-to-weight', q: /$^/, score: pct((p) => p.tensileMPa / p.density) },
+  cold: {
+    label: 'Low-temperature toughness',
+    q: /\b(cold|low[- ]temp\w*|cryogenic\w*|freez\w*|sub[- ]zero|arctic|winter)\b/,
+    score: POLYMERS.map((p) =>
+      /low temperature|cryogenic|cold/.test(strengthsText(p)) ? 1 : /low temperature|in the cold|cold service|stiffens below|brittle at low|near 0 °c/.test(weakText(p)) ? 0 : p.structure === 'Elastomer' && (p.tgC ?? 0) < -40 ? 0.8 : 0.4,
+    ),
+  },
+  fatigue: { label: 'Fatigue resistant', q: /\b(fatigue|cyclic load\w*|repeated load\w*|flex life|vibration)\b/, score: textPref(/fatigue|flex-fatigue/, null, 0.3) },
+  insulating: {
+    label: 'Electrical insulation',
+    q: /\b(electrical(ly)? insulat\w*|insulat\w*|dielectric|non[- ]?conductive)\b/,
+    score: POLYMERS.map((p) => (/conductive/.test(lc(p.limitations.join(' '))) ? 0 : /dielectric|electrical|insulation|connector/.test(strengthsText(p)) ? 1 : 0.5)),
+  },
+  conductive: {
+    label: 'Electrically conductive / ESD',
+    q: /\b(conductive|esd|anti[- ]?static|static[- ]dissipat\w*)\b/,
+    score: POLYMERS.map((p) => (/(?<!non-)conductive/.test(lc([...p.strengths, ...p.limitations].join(' '))) ? 1 : 0)),
+  },
+  vacuum: { label: 'Low outgassing / high purity', q: /\b(outgass\w*|vacuum|clean ?room|purity|leachables?|extractables?)\b/, score: textPref(/outgassing|vacuum|purity|high-purity|ultra-pure/, null, 0.2) },
+  bondable: {
+    label: 'Easy to bond, paint or print',
+    q: /\b(bond\w*|glu(e|ed|ing)|adhesives?|paint\w*|print(ing|able)? on|pad print\w*|decorat\w*|label\w*)\b/,
+    score: textPref(/bonds well|paints|glues|plates well|printable|solvent-weldable|solvent bonding/, /hard to bond|difficult to bond|bonding requires|impossible to glue|needs chemical etching|surface treatment|barely stick|can't be glued|hard to glue/, 0.4),
+  },
+  hotWater: {
+    label: 'Hot water / hydrolysis resistant',
+    q: /\b(hot water|hydroly\w*|boiling|dishwasher|wet heat|damp heat|humid heat)\b/,
+    score: textPref(/hot water|hydrolytic(ally)? stab|hydrolysis resist|steam/, /hydroly/, 0.4),
+  },
+  green: { label: 'Bio-based / recyclable', q: /\b(sustainab\w*|bio[- ]?based|recycl\w*|compostable|green|eco)\b/, score: textPref(/bio-based|compostable|recyclable/, null, 0.1) },
 };
 
 const PROP_PCT: Record<NumericProp, number[]> = {
@@ -515,6 +563,8 @@ export interface ParsedQuery {
   original: string;
   /** Query after spelling correction (what everything below was parsed from) */
   text: string;
+  /** Text left for keyword matching once property and requirement words are removed (they are scored from data instead) */
+  keywordText: string;
   corrections: [string, string][];
   constraints: Constraint[];
   signals: Signal[];
@@ -532,7 +582,22 @@ export function parseQuery(query: string): ParsedQuery {
     if (id === 'hot' && constraints.some((c) => c.kind === 'temp')) continue;
     if (p.q.test(q)) signals.push({ id: `pref-${id}`, kind: 'pref', label: p.label });
   }
-  return { original: query.trim(), text, corrections, constraints, signals };
+  // "stiff + lightweight" means specific stiffness, not the average of the two.
+  const has = (id: string) => signals.some((x) => x.id === `pref-${id}`);
+  for (const [a, combo] of [['stiff', 'stiffLight'], ['strong', 'strongLight']] as const) {
+    if (has(a) && has('light')) {
+      const keep = signals.filter((x) => x.id !== `pref-${a}` && x.id !== 'pref-light');
+      signals.length = 0;
+      signals.push(...keep, { id: `pref-${combo}`, kind: 'pref', label: PREFS[combo].label });
+    }
+  }
+  let keywordText = q;
+  const strip = (re: RegExp) => (keywordText = keywordText.replace(new RegExp(re.source, 'gi'), ' '));
+  for (const [id, p] of Object.entries(PREFS)) if (signals.some((x) => x.id === `pref-${id}`) || id === 'stiff' || id === 'light' || id === 'strong') strip(p.q);
+  for (const p of SIMPLE_PATTERNS) strip(p.re);
+  for (const c of CHEM_PATTERNS) strip(c.re);
+  keywordText = keywordText.replace(/\d+(\.\d+)?\s*(°|º)?\s*(c|f|mpa|gpa|psi|ksi|%|g\/cm3|g\/cc)?\b/gi, ' ').replace(/\s+/g, ' ').trim();
+  return { original: query.trim(), text, keywordText, corrections, constraints, signals };
 }
 
 /* ───────────────────────────── Hugging Face embeddings ───────────────────────────── */
@@ -714,7 +779,7 @@ export function rank(
     for (const id of prefs) if (PREFS[id].score[i] >= 0.75) why.push(PREFS[id].label);
     const checks = constraints.map((c) => checkConstraint(p, c));
     const warnings = checks.filter((c) => c.status === 'warn').length;
-    const clean = checks.length ? checks.filter((c) => c.status === 'pass').length / checks.length : 0;
+    const clean = checks.length ? checks.reduce((a, c) => a + (c.status === 'pass' ? (c.grade ?? 1) : 0), 0) / checks.length : 0;
     // Further past a numeric limit is better ("tensile > 100" → strongest first).
     const limitBonus = propLimits.length
       ? propLimits.reduce((a, c) => a + (c.op === '>=' ? PROP_PCT[c.prop!][i] : 1 - PROP_PCT[c.prop!][i]), 0) / propLimits.length
@@ -759,4 +824,56 @@ export function rank(
   const bestSet = new Set(best);
   const others = passing.filter((r) => !bestSet.has(r));
   return { best, others, excluded, mode };
+}
+
+/* ───────────────────────────── Chart focus ───────────────────────────── */
+
+export type ChartAxis = 'contUseC' | 'hdtC' | 'tensileMPa' | 'modulusGPa' | 'density' | 'elongationPct' | 'waterAbsPct' | 'costTier';
+
+export interface ChartLimit {
+  axis: ChartAxis;
+  op: '>=' | '<=';
+  value: number;
+  label: string;
+}
+
+const PREF_AXIS: Record<string, ChartAxis> = {
+  stiff: 'modulusGPa',
+  stiffLight: 'modulusGPa',
+  strongLight: 'tensileMPa',
+  flexible: 'modulusGPa',
+  strong: 'tensileMPa',
+  light: 'density',
+  tough: 'elongationPct',
+  hot: 'contUseC',
+  creep: 'hdtC',
+  cheapPref: 'costTier',
+  precise: 'waterAbsPct',
+};
+
+/** Which properties the query is about, so the chart can plot them and draw the limits. */
+export function chartFocus(parsed: ParsedQuery, disabled: Set<string>): { x: ChartAxis; y: ChartAxis; limits: ChartLimit[] } | null {
+  const limits: ChartLimit[] = [];
+  const axes: ChartAxis[] = [];
+  for (const c of parsed.constraints) {
+    if (disabled.has(c.id)) continue;
+    if (c.kind === 'temp') limits.push({ axis: 'contUseC', op: '>=', value: c.tempC!, label: `≥ ${c.tempC} °C` });
+    if (c.kind === 'prop') limits.push({ axis: c.prop as ChartAxis, op: c.op!, value: c.value!, label: c.label.replace(/^[^≥≤]+/, '').trim() });
+    if (c.kind === 'moisture') limits.push({ axis: 'waterAbsPct', op: '<=', value: 0.3, label: '≤ 0.3 %' });
+    if (c.kind === 'cost') limits.push({ axis: 'costTier', op: '<=', value: 2, label: '≤ $$' });
+  }
+  for (const l of limits) if (!axes.includes(l.axis)) axes.push(l.axis);
+  for (const s of parsed.signals) {
+    if (s.kind !== 'pref' || disabled.has(s.id)) continue;
+    const id = s.id.slice(5);
+    const a = PREF_AXIS[id];
+    if (a && !axes.includes(a)) axes.push(a);
+    if ((id === 'stiffLight' || id === 'strongLight') && !axes.includes('density')) axes.push('density');
+  }
+  if (axes.length === 0) return null;
+  let y = axes[0];
+  let x: ChartAxis = axes[1] ?? (y === 'contUseC' ? 'tensileMPa' : 'contUseC');
+  // Temperature reads most naturally on the x-axis.
+  if (y === 'contUseC') [x, y] = [y, x];
+  return { x, y, limits };
 }

@@ -24,6 +24,7 @@ import {
   rank,
   semanticScores,
   type Check,
+  chartFocus,
   type ParsedQuery,
   type Result,
 } from "./search";
@@ -255,6 +256,7 @@ function Details({ p }: { p: Polymer }) {
           <Row k="Water abs. (24 h)" v={fmt(p.waterAbsPct, " %")} />
           <Row k="Transparency" v={p.transparency[0].toUpperCase() + p.transparency.slice(1)} />
           <Row k="UL94 (base)" v={p.ul94} />
+          <Row k="UV / weathering" v={`${RATING_LABELS[p.uv]} (unstabilized)`} />
           <Row k="Grades" v={[p.medical && "Medical", p.food && "Food contact"].filter(Boolean).join(", ") || "—"} />
           <Row k="Processing" v={p.processes.join(", ")} />
           <Row k="Also known as" v={p.aka.join(", ")} />
@@ -546,6 +548,10 @@ function CompareTable({ polymers, onRemove, onClear }: { polymers: Polymer[]; on
       ),
     })),
     { label: "UL94 (base grade)", get: (p) => p.ul94 },
+    {
+      label: "UV / weathering",
+      get: (p) => <span className={`inline-block w-[74px] rounded-md px-1.5 py-[1px] text-center text-[12px] font-medium ${ratingTone[p.uv]}`}>{RATING_LABELS[p.uv]}</span>,
+    },
     { label: "Cost", get: (p) => "$".repeat(p.costTier) },
     { label: "Processing", get: (p) => p.processes.join(", ") },
   ];
@@ -695,7 +701,7 @@ export default function PolymerFinder() {
     if (trimmed) ensureModel();
   };
 
-  const kw = useMemo(() => (query ? keywordScores(query) : null), [query]);
+  const kw = useMemo(() => (parsed ? keywordScores(parsed.keywordText) : null), [parsed]);
   const semScores = sem && sem.query === query ? sem.scores : null;
 
   const ranking = useMemo(() => {
@@ -734,6 +740,9 @@ export default function PolymerFinder() {
     return st;
   }, [ranking]);
   const chartLabels = ranking ? ranking.best.slice(0, 3).map((r) => r.polymer.id) : [];
+  const focus = useMemo(() => (parsed ? chartFocus(parsed, disabled) : null), [parsed, disabled]);
+  // Remount the chart when the search focus changes so it jumps to the relevant axes.
+  const chartKey = focus ? `${focus.x}|${focus.y}|${focus.limits.map((l) => l.label).join(",")}` : "default";
 
   const openFromChart = (id: string) => {
     if (ranking?.excluded.some((r) => r.polymer.id === id)) setShowExcluded(true);
@@ -763,7 +772,17 @@ export default function PolymerFinder() {
             Property map
           </SectionHeading>
           {showChart && (
-            <PropertyChart polymers={POLYMERS} status={chartStatus} compareIds={compare} labelIds={chartLabels} onSelect={openFromChart} />
+            <PropertyChart
+            key={chartKey}
+            polymers={POLYMERS}
+            status={chartStatus}
+            compareIds={compare}
+            labelIds={chartLabels}
+            onSelect={openFromChart}
+            initialX={focus?.x}
+            initialY={focus?.y}
+            limits={focus?.limits}
+          />
           )}
         </section>
   );
