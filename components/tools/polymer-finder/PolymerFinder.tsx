@@ -13,6 +13,7 @@ import {
   type Rating,
 } from "./polymers";
 import PropertyChart, { type PointStatus } from "./PropertyChart";
+import StressStrainChart, { MAX_CURVES, type CurveSel } from "./StressStrainChart";
 import { FIELD_NOTE_CATEGORIES, notesFor, type FieldNoteCategory } from "./fieldNotes";
 import { ALL_SOURCES, sourcesFor } from "./sources";
 import { ALL_READING, readingFor } from "./reading";
@@ -112,6 +113,9 @@ function ResultCard({
   compared,
   compareDisabled,
   onToggleCompare,
+  plotted,
+  plotDisabled,
+  onTogglePlot,
   dimmed,
 }: {
   result: Result;
@@ -121,6 +125,9 @@ function ResultCard({
   compared: boolean;
   compareDisabled: boolean;
   onToggleCompare: () => void;
+  plotted: boolean;
+  plotDisabled: boolean;
+  onTogglePlot: () => void;
   dimmed?: boolean;
 }) {
   const p = result.polymer;
@@ -204,6 +211,20 @@ function ResultCard({
             className="h-[15px] w-[15px] accent-[#2563a8]"
           />
           Compare
+        </label>
+        <label
+          className={`flex items-center gap-2 text-[13px] font-medium ${
+            plotDisabled && !plotted ? "cursor-not-allowed text-[var(--faint)]" : "cursor-pointer text-[var(--muted)]"
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={plotted}
+            disabled={plotDisabled && !plotted}
+            onChange={onTogglePlot}
+            className="h-[15px] w-[15px] accent-[#2563a8]"
+          />
+          Stress–strain
         </label>
       </div>
 
@@ -785,6 +806,12 @@ export default function PolymerFinder() {
   const [showExcluded, setShowExcluded] = useState(false);
   const [showOthers, setShowOthers] = useState(false);
   const [showChart, setShowChart] = useState(true);
+  const [chartTab, setChartTab] = useState<"ss" | "map">("ss");
+  const [curves, setCurves] = useState<CurveSel[]>([
+    { id: "pc", slot: 0 },
+    { id: "pom", slot: 1 },
+    { id: "pa66gf", slot: 2 },
+  ]);
 
   // Download the model on first interaction, not on page load.
   const ensureModel = useCallback(() => {
@@ -849,6 +876,25 @@ export default function PolymerFinder() {
       return next;
     });
 
+  // Stress–strain selection: each material keeps its color slot until removed.
+  const addCurve = (id: string) =>
+    setCurves((prev) => {
+      if (prev.some((c) => c.id === id) || prev.length >= MAX_CURVES) return prev;
+      const used = new Set(prev.map((c) => c.slot));
+      let slot = 0;
+      while (used.has(slot)) slot++;
+      return [...prev, { id, slot }];
+    });
+  const removeCurve = (id: string) => setCurves((prev) => prev.filter((c) => c.id !== id));
+  const toggleCurve = (id: string) => {
+    if (curves.some((c) => c.id === id)) removeCurve(id);
+    else {
+      addCurve(id);
+      setChartTab("ss");
+      setShowChart(true);
+    }
+  };
+
   const toggleCompare = (id: string) =>
     setCompare((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : prev.length >= MAX_COMPARE ? prev : [...prev, id]));
 
@@ -863,6 +909,7 @@ export default function PolymerFinder() {
     }
     return st;
   }, [ranking]);
+  const bestIds = useMemo(() => (ranking ? ranking.best.slice(0, 4).map((r) => r.polymer.id) : []), [ranking]);
   const chartLabels = ranking ? ranking.best.slice(0, 3).map((r) => r.polymer.id) : [];
   const focus = useMemo(() => (parsed ? chartFocus(parsed, disabled) : null), [parsed, disabled]);
   // Remount the chart when the search focus changes so it jumps to the relevant axes.
@@ -893,9 +940,45 @@ export default function PolymerFinder() {
               </button>
             }
           >
-            Property map
+            Charts
           </SectionHeading>
           {showChart && (
+            <div className="mb-3 flex gap-1" role="tablist" aria-label="Chart type">
+              {(
+                [
+                  ["ss", "Stress–strain"],
+                  ["map", "Property map"],
+                ] as const
+              ).map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  role="tab"
+                  aria-selected={chartTab === k}
+                  onClick={() => setChartTab(k)}
+                  className={`rounded-full border px-3.5 py-1 text-[13px] font-semibold ${
+                    chartTab === k
+                      ? "border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent)]"
+                      : "border-[var(--border)] bg-[var(--card-bg)] text-[var(--muted)] hover:text-[var(--foreground)]"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+          {showChart && chartTab === "ss" && (
+            <StressStrainChart
+              selected={curves}
+              onAdd={addCurve}
+              onRemove={removeCurve}
+              onClear={() => setCurves([])}
+              suggestions={bestIds}
+              onUseSuggestions={() => setCurves(bestIds.map((id, i) => ({ id, slot: i })))}
+              onSelect={openFromChart}
+            />
+          )}
+          {showChart && chartTab === "map" && (
             <PropertyChart
             key={chartKey}
             polymers={POLYMERS}
@@ -922,6 +1005,9 @@ export default function PolymerFinder() {
       compared={compare.includes(r.polymer.id)}
       compareDisabled={compare.length >= MAX_COMPARE}
       onToggleCompare={() => toggleCompare(r.polymer.id)}
+      plotted={curves.some((c) => c.id === r.polymer.id)}
+      plotDisabled={curves.length >= MAX_CURVES}
+      onTogglePlot={() => toggleCurve(r.polymer.id)}
     />
   );
 
