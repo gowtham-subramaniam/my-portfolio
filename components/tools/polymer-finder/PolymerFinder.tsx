@@ -16,6 +16,9 @@ import PropertyChart, { type PointStatus } from "./PropertyChart";
 import { FIELD_NOTE_CATEGORIES, notesFor, type FieldNoteCategory } from "./fieldNotes";
 import { ALL_SOURCES, sourcesFor } from "./sources";
 import { ALL_READING, readingFor } from "./reading";
+import Term from "./Term";
+import type { TermKey } from "./glossary";
+import { quizFor } from "./quiz";
 import {
   MODEL_ID,
   getDocEmbeddings,
@@ -76,15 +79,15 @@ function fmt(v: number | null | undefined, unit = "") {
 
 function keyStats(p: Polymer) {
   return [
-    { label: "Cont. use", value: fmt(p.contUseC, " °C") },
-    { label: "HDT 1.8 MPa", value: fmt(p.hdtC, " °C") },
-    { label: "Tensile", value: fmt(p.tensileMPa, " MPa") },
+    { label: "Cont. use", term: "contUse", value: fmt(p.contUseC, " °C") },
+    { label: "HDT 1.8 MPa", term: "hdt", value: fmt(p.hdtC, " °C") },
+    { label: "Tensile", term: "tensile", value: fmt(p.tensileMPa, " MPa") },
     p.modulusGPa !== null
-      ? { label: "Modulus", value: fmt(p.modulusGPa, " GPa") }
-      : { label: "Hardness", value: p.hardness?.split(" ")[0] ?? "—" },
-    { label: "Density", value: fmt(p.density, " g/cm³") },
-    { label: "Cost", value: "$".repeat(p.costTier) },
-  ];
+      ? { label: "Modulus", term: "modulus", value: fmt(p.modulusGPa, " GPa") }
+      : { label: "Hardness", term: "hardness", value: p.hardness?.split(" ")[0] ?? "—" },
+    { label: "Density", term: "density", value: fmt(p.density, " g/cm³") },
+    { label: "Cost", term: "cost", value: "$".repeat(p.costTier) },
+  ] satisfies { label: string; term: TermKey; value: string }[];
 }
 
 function SectionHeading({ children, right }: { children: ReactNode; right?: ReactNode }) {
@@ -146,7 +149,9 @@ function ResultCard({
       <dl className="mt-3 grid grid-cols-3 gap-x-4 gap-y-2 sm:grid-cols-6">
         {keyStats(p).map((s) => (
           <div key={s.label} className="min-w-0">
-            <dt className="text-[11px] text-[var(--subtle)]">{s.label}</dt>
+            <dt className="text-[11px] text-[var(--subtle)]">
+              <Term k={s.term}>{s.label}</Term>
+            </dt>
             <dd className="text-[14px] font-semibold tabular-nums text-[var(--foreground)]">{s.value}</dd>
           </div>
         ))}
@@ -220,12 +225,16 @@ function Details({ p }: { p: Polymer }) {
       </div>
       <div className="space-y-4">
         <div>
-          <h4 className={`mb-1.5 ${LABEL}`}>Chemical resistance</h4>
+          <h4 className={`mb-1.5 ${LABEL}`}>
+            <Term k="chem">Chemical resistance</Term>
+          </h4>
           <table className="w-full text-[13px]">
             <tbody>
               {(Object.keys(CHEM_LABELS) as ChemKey[]).map((k) => (
                 <tr key={k} className="border-b border-[var(--border)] last:border-0">
-                  <td className="py-1 pr-2 text-[var(--muted)]">{CHEM_LABELS[k]}</td>
+                  <td className="py-1 pr-2 text-[var(--muted)]">
+                    <Term k={k}>{CHEM_LABELS[k]}</Term>
+                  </td>
                   <td className="py-1 text-right">
                     <span className={`inline-block w-[74px] rounded-md px-1.5 py-[1px] text-center text-[12px] font-medium ${ratingTone[p.chem[k]]}`}>
                       {RATING_LABELS[p.chem[k]]}
@@ -240,34 +249,119 @@ function Details({ p }: { p: Polymer }) {
           <h4 className={`mb-1.5 ${LABEL}`}>Sterilization</h4>
           <div className="flex flex-wrap gap-x-4 text-[13px] text-[var(--muted)]">
             <span>
-              Steam: <b className={compatTone[p.sterilization.autoclave]}>{compatText[p.sterilization.autoclave]}</b>
+              <Term k="steam">Steam</Term>: <b className={compatTone[p.sterilization.autoclave]}>{compatText[p.sterilization.autoclave]}</b>
             </span>
             <span>
-              Gamma: <b className={compatTone[p.sterilization.gamma]}>{compatText[p.sterilization.gamma]}</b>
+              <Term k="gamma">Gamma</Term>: <b className={compatTone[p.sterilization.gamma]}>{compatText[p.sterilization.gamma]}</b>
             </span>
             <span>
-              EtO: <b className={compatTone[p.sterilization.eto]}>{compatText[p.sterilization.eto]}</b>
+              <Term k="eto">EtO</Term>: <b className={compatTone[p.sterilization.eto]}>{compatText[p.sterilization.eto]}</b>
             </span>
           </div>
         </div>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[13px]">
-          <Row k="Structure" v={p.structure} />
-          <Row k="Tg / Tm" v={`${fmt(p.tgC, " °C")} / ${fmt(p.tmC, " °C")}`} />
-          <Row k="Elongation" v={fmt(p.elongationPct, " %")} />
-          {p.hardness && <Row k="Hardness" v={p.hardness} />}
-          <Row k="Water abs. (24 h)" v={fmt(p.waterAbsPct, " %")} />
-          <Row k="Transparency" v={p.transparency[0].toUpperCase() + p.transparency.slice(1)} />
-          <Row k="UL94 (base)" v={p.ul94} />
-          <Row k="UV / weathering" v={`${RATING_LABELS[p.uv]} (unstabilized)`} />
-          <Row k="Grades" v={[p.medical && "Medical", p.food && "Food contact"].filter(Boolean).join(", ") || "—"} />
-          <Row k="Processing" v={p.processes.join(", ")} />
-          <Row k="Also known as" v={p.aka.join(", ")} />
-          <Row k="Data basis" v={p.grade} />
+          <Row k="Structure" term="structure" v={p.structure} />
+          <Row k="Tg / Tm" term="tgtm" v={`${fmt(p.tgC, " °C")} / ${fmt(p.tmC, " °C")}`} />
+          <Row k="Elongation" term="elongation" v={fmt(p.elongationPct, " %")} />
+          {p.hardness && <Row k="Hardness" term="hardness" v={p.hardness} />}
+          <Row k="Water abs. (24 h)" term="water" v={fmt(p.waterAbsPct, " %")} />
+          <Row k="Transparency" term="transparency" v={p.transparency[0].toUpperCase() + p.transparency.slice(1)} />
+          <Row k="UL94 (base)" term="ul94" v={p.ul94} />
+          <Row k="UV / weathering" term="uv" v={`${RATING_LABELS[p.uv]} (unstabilized)`} />
+          <Row k="Grades" term="grades" v={[p.medical && "Medical", p.food && "Food contact"].filter(Boolean).join(", ") || "—"} />
+          <Row k="Processing" term="processes" v={p.processes.join(", ")} />
+          <Row k="Also known as" term="aka" v={p.aka.join(", ")} />
+          <Row k="Data basis" term="basis" v={p.grade} />
         </dl>
         <ProcessingBlock pr={p.processing} elastomer={p.structure === "Elastomer" && p.processes.some((x) => /compression|transfer/i.test(x))} />
       </div>
       </div>
+      <KnowledgeCheck p={p} />
       <FieldNotes p={p} />
+    </div>
+  );
+}
+
+function KnowledgeCheck({ p }: { p: Polymer }) {
+  const questions = useMemo(() => quizFor(p), [p]);
+  const [open, setOpen] = useState(false);
+  const [picked, setPicked] = useState<Record<string, number>>({});
+  const answered = Object.keys(picked).length;
+  const correct = questions.filter((q) => picked[q.id] === q.answer).length;
+  if (questions.length === 0) return null;
+  return (
+    <div className="mt-6 border-t border-[var(--border)] pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h4 className={LABEL}>Knowledge check</h4>
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          className="text-[13px] font-semibold text-[var(--accent)] hover:underline"
+        >
+          {open ? "Hide ▴" : `Test yourself on ${p.abbr} (${questions.length} questions) ▾`}
+        </button>
+      </div>
+      {open && (
+        <div className="mt-3">
+          <p className="mb-3 text-[12px] leading-[1.6] text-[var(--subtle)]">Answers come straight from this material&apos;s data above.</p>
+          <ol className="space-y-4">
+            {questions.map((q, qi) => {
+              const choice = picked[q.id];
+              const done = choice !== undefined;
+              return (
+                <li key={q.id}>
+                  <div className="mb-1.5 text-[14px] font-semibold text-[var(--foreground)]">
+                    {qi + 1}. {q.prompt}
+                  </div>
+                  <div className="flex flex-wrap gap-2" role="group" aria-label={q.prompt}>
+                    {q.options.map((o, i) => {
+                      const isAnswer = i === q.answer;
+                      const tone = !done
+                        ? "border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[var(--accent)]"
+                        : isAnswer
+                          ? "border-[#cfe8cf] bg-[#f0faf0] text-[#1a5c2a]"
+                          : i === choice
+                            ? "border-[#f0cfc8] bg-[#fdf0ee] text-[#8a2a1a]"
+                            : "border-[var(--border)] bg-[var(--background)] text-[var(--faint)]";
+                      return (
+                        <button
+                          key={o}
+                          type="button"
+                          disabled={done}
+                          onClick={() => setPicked((s) => ({ ...s, [q.id]: i }))}
+                          aria-pressed={i === choice}
+                          className={`rounded-lg border px-3 py-1.5 text-[13px] font-medium ${tone}`}
+                        >
+                          {done && isAnswer && <span aria-hidden>✓ </span>}
+                          {done && i === choice && !isAnswer && <span aria-hidden>✕ </span>}
+                          {o}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {done && (
+                    <p className="mt-1.5 text-[13px] leading-[1.6] text-[var(--muted)]" aria-live="polite">
+                      <b className={choice === q.answer ? "text-[#1a5c2a]" : "text-[#8a2a1a]"}>{choice === q.answer ? "Correct." : "Not quite."}</b> {q.explanation}
+                    </p>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+          {answered > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-4 text-[13px]">
+              <span className="font-semibold text-[var(--foreground)]">
+                Score: {correct} / {answered}
+                {answered === questions.length && (correct === questions.length ? " · You know " + p.abbr + " well." : "")}
+              </span>
+              <button type="button" onClick={() => setPicked({})} className="text-[var(--accent)] hover:underline">
+                Start over
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -310,8 +404,8 @@ function PracticalReading({ p }: { p: Polymer }) {
   if (items.length === 0) return null;
   return (
     <div className="mt-4">
-      <h4 className={`mb-1.5 ${LABEL}`}>Practical reading</h4>
-      <ul className="space-y-1.5">
+      <h4 className={`mb-1.5 ${LABEL}`}>Practical reading &amp; key lessons</h4>
+      <ul className="space-y-3">
         {items.map((r) => (
           <li key={r.url} className="text-[13px] leading-[1.55]">
             <a href={r.url} target="_blank" rel="noreferrer" className="font-semibold text-[var(--accent)] hover:underline">
@@ -319,6 +413,11 @@ function PracticalReading({ p }: { p: Polymer }) {
             </a>
             <span className="text-[var(--subtle)]"> · {r.source}</span>
             <div className="text-[var(--muted)]">{r.note}</div>
+            <ul className="mt-1 space-y-0.5 border-l-2 border-[var(--accent-bg)] pl-3 text-[var(--muted)]">
+              {r.takeaways.map((t) => (
+                <li key={t}>{t}</li>
+              ))}
+            </ul>
           </li>
         ))}
       </ul>
@@ -335,10 +434,10 @@ function ProcessingBlock({ pr, elastomer }: { pr: Processing; elastomer: boolean
     <div>
       <h4 className={`mb-1.5 ${LABEL}`}>Processing (typical)</h4>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[13px]">
-        <Row k="Mold shrinkage" v={range(pr.shrinkPct, "%")} />
-        <Row k="Drying" v={pr.dryC ? `${pr.dryC} °C, ${pr.dryH ?? "2–4"} h` : "Not normally required"} />
-        <Row k={elastomer ? "Cure temp" : "Melt temp"} v={range(pr.meltC, "°C")} />
-        {!elastomer && <Row k="Mold temp" v={range(pr.moldC, "°C")} />}
+        <Row k="Mold shrinkage" term="shrink" v={range(pr.shrinkPct, "%")} />
+        <Row k="Drying" term="drying" v={pr.dryC ? `${pr.dryC} °C, ${pr.dryH ?? "2–4"} h` : "Not normally required"} />
+        <Row k={elastomer ? "Cure temp" : "Melt temp"} term={elastomer ? "cure" : "melt"} v={range(pr.meltC, "°C")} />
+        {!elastomer && <Row k="Mold temp" term="mold" v={range(pr.moldC, "°C")} />}
       </dl>
       {pr.note && <p className="mt-1.5 text-[12px] leading-[1.6] text-[var(--subtle)]">{pr.note}</p>}
     </div>
@@ -519,10 +618,10 @@ function FieldNoteForm({ p, onClose }: { p: Polymer; onClose: () => void }) {
   );
 }
 
-function Row({ k, v }: { k: string; v: string }) {
+function Row({ k, v, term }: { k: string; v: string; term?: TermKey }) {
   return (
     <>
-      <dt className="text-[var(--subtle)]">{k}</dt>
+      <dt className="text-[var(--subtle)]">{term ? <Term k={term}>{k}</Term> : k}</dt>
       <dd className="text-[var(--foreground)]">{v}</dd>
     </>
   );
@@ -547,36 +646,38 @@ function ListBlock({ title, items }: { title: string; items: string[] }) {
 /* ───────────────────────────── Comparison table ───────────────────────────── */
 
 function CompareTable({ polymers, onRemove, onClear }: { polymers: Polymer[]; onRemove: (id: string) => void; onClear: () => void }) {
-  const rows: { label: string; get: (p: Polymer) => ReactNode }[] = [
-    { label: "Family", get: (p) => p.family },
-    { label: "Structure", get: (p) => p.structure },
-    { label: "Continuous use", get: (p) => fmt(p.contUseC, " °C") },
-    { label: "HDT @ 1.8 MPa", get: (p) => fmt(p.hdtC, " °C") },
-    { label: "Tg / Tm", get: (p) => `${fmt(p.tgC, " °C")} / ${fmt(p.tmC, " °C")}` },
-    { label: "Tensile strength", get: (p) => fmt(p.tensileMPa, " MPa") },
-    { label: "Modulus / hardness", get: (p) => (p.modulusGPa !== null ? fmt(p.modulusGPa, " GPa") : p.hardness ?? "—") },
-    { label: "Elongation", get: (p) => fmt(p.elongationPct, " %") },
-    { label: "Density", get: (p) => fmt(p.density, " g/cm³") },
-    { label: "Water abs. (24 h)", get: (p) => fmt(p.waterAbsPct, " %") },
-    { label: "Transparency", get: (p) => p.transparency[0].toUpperCase() + p.transparency.slice(1) },
-    { label: "Steam autoclave", get: (p) => <b className={compatTone[p.sterilization.autoclave]}>{compatText[p.sterilization.autoclave]}</b> },
-    { label: "Gamma", get: (p) => <b className={compatTone[p.sterilization.gamma]}>{compatText[p.sterilization.gamma]}</b> },
-    { label: "EtO", get: (p) => <b className={compatTone[p.sterilization.eto]}>{compatText[p.sterilization.eto]}</b> },
+  const rows: { label: string; term?: TermKey; get: (p: Polymer) => ReactNode }[] = [
+    { label: "Family", term: "family", get: (p) => p.family },
+    { label: "Structure", term: "structure", get: (p) => p.structure },
+    { label: "Continuous use", term: "contUse", get: (p) => fmt(p.contUseC, " °C") },
+    { label: "HDT @ 1.8 MPa", term: "hdt", get: (p) => fmt(p.hdtC, " °C") },
+    { label: "Tg / Tm", term: "tgtm", get: (p) => `${fmt(p.tgC, " °C")} / ${fmt(p.tmC, " °C")}` },
+    { label: "Tensile strength", term: "tensile", get: (p) => fmt(p.tensileMPa, " MPa") },
+    { label: "Modulus / hardness", term: "modulus", get: (p) => (p.modulusGPa !== null ? fmt(p.modulusGPa, " GPa") : p.hardness ?? "—") },
+    { label: "Elongation", term: "elongation", get: (p) => fmt(p.elongationPct, " %") },
+    { label: "Density", term: "density", get: (p) => fmt(p.density, " g/cm³") },
+    { label: "Water abs. (24 h)", term: "water", get: (p) => fmt(p.waterAbsPct, " %") },
+    { label: "Transparency", term: "transparency", get: (p) => p.transparency[0].toUpperCase() + p.transparency.slice(1) },
+    { label: "Steam autoclave", term: "steam", get: (p) => <b className={compatTone[p.sterilization.autoclave]}>{compatText[p.sterilization.autoclave]}</b> },
+    { label: "Gamma", term: "gamma", get: (p) => <b className={compatTone[p.sterilization.gamma]}>{compatText[p.sterilization.gamma]}</b> },
+    { label: "EtO", term: "eto", get: (p) => <b className={compatTone[p.sterilization.eto]}>{compatText[p.sterilization.eto]}</b> },
     ...(Object.keys(CHEM_LABELS) as ChemKey[]).map((k) => ({
       label: CHEM_LABELS[k],
+      term: k as TermKey,
       get: (p: Polymer) => (
         <span className={`inline-block w-[74px] rounded-md px-1.5 py-[1px] text-center text-[12px] font-medium ${ratingTone[p.chem[k]]}`}>
           {RATING_LABELS[p.chem[k]]}
         </span>
       ),
     })),
-    { label: "UL94 (base grade)", get: (p) => p.ul94 },
+    { label: "UL94 (base grade)", term: "ul94", get: (p) => p.ul94 },
     {
       label: "UV / weathering",
+      term: "uv",
       get: (p) => <span className={`inline-block w-[74px] rounded-md px-1.5 py-[1px] text-center text-[12px] font-medium ${ratingTone[p.uv]}`}>{RATING_LABELS[p.uv]}</span>,
     },
-    { label: "Cost", get: (p) => "$".repeat(p.costTier) },
-    { label: "Processing", get: (p) => p.processes.join(", ") },
+    { label: "Cost", term: "cost", get: (p) => "$".repeat(p.costTier) },
+    { label: "Processing", term: "processes", get: (p) => p.processes.join(", ") },
   ];
 
   return (
@@ -609,7 +710,7 @@ function CompareTable({ polymers, onRemove, onClear }: { polymers: Polymer[]; on
           <tbody>
             {rows.map((r) => (
               <tr key={r.label} className="border-b border-[var(--border)] last:border-0">
-                <td className="px-4 py-1.5 text-[var(--subtle)]">{r.label}</td>
+                <td className="px-4 py-1.5 text-[var(--subtle)]">{r.term ? <Term k={r.term}>{r.label}</Term> : r.label}</td>
                 {polymers.map((p) => (
                   <td key={p.id} className="px-4 py-1.5 text-[var(--foreground)]">
                     {r.get(p)}

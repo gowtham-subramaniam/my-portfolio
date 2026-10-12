@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Polymer } from "./polymers";
 import type { ChartLimit } from "./search";
+import Term from "./Term";
+import type { TermKey } from "./glossary";
 
 /* ───────────────────────────── Axes ───────────────────────────── */
 
@@ -25,6 +27,17 @@ const AXES: Record<AxisKey, AxisDef> = {
   elongationPct: { label: "Elongation at break", short: "Elongation", unit: "%", log: true, get: (p) => p.elongationPct },
   waterAbsPct: { label: "Water absorption (24 h)", short: "Water abs.", unit: "%", log: true, get: (p) => Math.max(p.waterAbsPct, 0.01) },
   costTier: { label: "Relative cost (1 = $, 5 = $$$$$)", short: "Cost", unit: "", log: false, get: (p) => p.costTier },
+};
+
+const AXIS_TERM: Record<AxisKey, TermKey> = {
+  contUseC: "contUse",
+  hdtC: "hdt",
+  tensileMPa: "tensile",
+  modulusGPa: "modulus",
+  density: "density",
+  elongationPct: "elongation",
+  waterAbsPct: "water",
+  costTier: "cost",
 };
 
 const AXIS_ORDER: AxisKey[] = ["contUseC", "hdtC", "tensileMPa", "modulusGPa", "density", "elongationPct", "waterAbsPct", "costTier"];
@@ -198,6 +211,9 @@ export default function PropertyChart({
               </option>
             ))}
           </select>
+          <Term k={AXIS_TERM[yKey]} label={`What is ${AXES[yKey].label}?`} className="no-underline text-[var(--subtle)]">
+            ⓘ
+          </Term>
         </label>
         <label className="flex items-center gap-2">
           X
@@ -208,6 +224,9 @@ export default function PropertyChart({
               </option>
             ))}
           </select>
+          <Term k={AXIS_TERM[xKey]} label={`What is ${AXES[xKey].label}?`} className="no-underline text-[var(--subtle)]">
+            ⓘ
+          </Term>
         </label>
         {hasExcluded && (
           <label className="flex cursor-pointer items-center gap-2">
