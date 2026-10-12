@@ -17,9 +17,9 @@ import { ALL_SOURCES, sourcesFor } from "./sources";
 import { ALL_READING, readingFor } from "./reading";
 import Term from "./Term";
 import type { TermKey } from "./glossary";
-import { quizFor } from "./quiz";
 import { REFS, fmtVal } from "./refs";
 import { isVerified, valueText, type VKey } from "./verified";
+import { applicationsFor, funFactsFor } from "./applications";
 import { designFor, escFor, joiningFor, medicalFor, opticalFor, ricFor, snapFitFor, type Item } from "./guides";
 import {
   MODEL_ID,
@@ -231,6 +231,7 @@ function Details({ p }: { p: Polymer }) {
     <div className="mt-4 border-t border-[var(--border)] pt-4 text-[14px]">
       <ReferenceGrade p={p} />
       <WatchOuts p={p} />
+      <Applications p={p} />
       <PracticalReading p={p} />
       <div className="mt-5 grid gap-6 md:grid-cols-2">
       <div className="space-y-4">
@@ -293,7 +294,6 @@ function Details({ p }: { p: Polymer }) {
       </div>
       </div>
       <GuideSections p={p} />
-      <KnowledgeCheck p={p} />
       <FieldNotes p={p} />
     </div>
   );
@@ -364,6 +364,49 @@ function ReferenceGrade({ p }: { p: Polymer }) {
   );
 }
 
+function SrcLink({ src }: { src: Item["src"] }) {
+  return (
+    <a href={src.url} target="_blank" rel="noreferrer" className="break-words text-[12px] text-[var(--accent)] hover:underline">
+      [{src.label}]
+    </a>
+  );
+}
+
+function Applications({ p }: { p: Polymer }) {
+  const apps = applicationsFor(p.id);
+  const facts = funFactsFor(p.id);
+  if (apps.length === 0 && facts.length === 0) return null;
+  return (
+    <div className={`mt-5 grid gap-x-6 gap-y-5 ${apps.length > 0 && facts.length > 0 ? "md:grid-cols-[3fr_2fr]" : ""}`}>
+      {apps.length > 0 && (
+        <div>
+          <h4 className={`mb-1.5 ${LABEL}`}>Where it&apos;s used &amp; why</h4>
+          <ul className="space-y-2">
+            {apps.map((a) => (
+              <li key={a.use} className="text-[13px] leading-[1.6] text-[var(--muted)]">
+                <span className="font-semibold text-[var(--foreground)]">{a.use}</span>
+                {a.why && <> &mdash; {a.why}.</>} <SrcLink src={a.src} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {facts.length > 0 && (
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] px-4 py-3">
+          <h4 className={`mb-1.5 ${LABEL}`}>Fun facts</h4>
+          <ul className="space-y-2">
+            {facts.map((f) => (
+              <li key={f.text} className="text-[13px] leading-[1.6] text-[var(--muted)]">
+                {f.text} <SrcLink src={f.src} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ItemList({ items }: { items: Item[] }) {
   return (
     <ul className="space-y-1.5">
@@ -401,90 +444,6 @@ function GuideSections({ p }: { p: Polymer }) {
           <ItemList items={items} />
         </div>
       ))}
-    </div>
-  );
-}
-
-function KnowledgeCheck({ p }: { p: Polymer }) {
-  const questions = useMemo(() => quizFor(p), [p]);
-  const [open, setOpen] = useState(false);
-  const [picked, setPicked] = useState<Record<string, number>>({});
-  const answered = Object.keys(picked).length;
-  const correct = questions.filter((q) => picked[q.id] === q.answer).length;
-  if (questions.length === 0) return null;
-  return (
-    <div className="mt-6 border-t border-[var(--border)] pt-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h4 className={LABEL}>Knowledge check</h4>
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          aria-expanded={open}
-          className="text-[13px] font-semibold text-[var(--accent)] hover:underline"
-        >
-          {open ? "Hide ▴" : `Test yourself on ${p.abbr} (${questions.length} questions) ▾`}
-        </button>
-      </div>
-      {open && (
-        <div className="mt-3">
-          <p className="mb-3 text-[12px] leading-[1.6] text-[var(--subtle)]">Every answer comes from the reference datasheet linked at the top of these details.</p>
-          <ol className="space-y-4">
-            {questions.map((q, qi) => {
-              const choice = picked[q.id];
-              const done = choice !== undefined;
-              return (
-                <li key={q.id}>
-                  <div className="mb-1.5 text-[14px] font-semibold text-[var(--foreground)]">
-                    {qi + 1}. {q.prompt}
-                  </div>
-                  <div className="flex flex-wrap gap-2" role="group" aria-label={q.prompt}>
-                    {q.options.map((o, i) => {
-                      const isAnswer = i === q.answer;
-                      const tone = !done
-                        ? "border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[var(--accent)]"
-                        : isAnswer
-                          ? "border-[#cfe8cf] bg-[#f0faf0] text-[#1a5c2a]"
-                          : i === choice
-                            ? "border-[#f0cfc8] bg-[#fdf0ee] text-[#8a2a1a]"
-                            : "border-[var(--border)] bg-[var(--background)] text-[var(--faint)]";
-                      return (
-                        <button
-                          key={o}
-                          type="button"
-                          disabled={done}
-                          onClick={() => setPicked((s) => ({ ...s, [q.id]: i }))}
-                          aria-pressed={i === choice}
-                          className={`rounded-lg border px-3 py-1.5 text-[13px] font-medium ${tone}`}
-                        >
-                          {done && isAnswer && <span aria-hidden>✓ </span>}
-                          {done && i === choice && !isAnswer && <span aria-hidden>✕ </span>}
-                          {o}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {done && (
-                    <p className="mt-1.5 text-[13px] leading-[1.6] text-[var(--muted)]" aria-live="polite">
-                      <b className={choice === q.answer ? "text-[#1a5c2a]" : "text-[#8a2a1a]"}>{choice === q.answer ? "Correct." : "Not quite."}</b> {q.explanation}
-                    </p>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-          {answered > 0 && (
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-[13px]">
-              <span className="font-semibold text-[var(--foreground)]">
-                Score: {correct} / {answered}
-                {answered === questions.length && (correct === questions.length ? " · You know " + p.abbr + " well." : "")}
-              </span>
-              <button type="button" onClick={() => setPicked({})} className="text-[var(--accent)] hover:underline">
-                Start over
-              </button>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
