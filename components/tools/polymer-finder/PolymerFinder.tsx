@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   CHEM_LABELS,
   POLYMERS,
@@ -18,6 +18,9 @@ import { ALL_READING, readingFor } from "./reading";
 import Term from "./Term";
 import type { TermKey } from "./glossary";
 import { quizFor } from "./quiz";
+import { REFS, fmtVal } from "./refs";
+import { isVerified, valueText, type VKey } from "./verified";
+import { designFor, escFor, joiningFor, medicalFor, opticalFor, ricFor, snapFitFor, type Item } from "./guides";
 import {
   MODEL_ID,
   getDocEmbeddings,
@@ -70,22 +73,32 @@ const compatTone: Record<Compat, string> = {
   no: "text-[#8a2a1a]",
 };
 
-function fmt(v: number | null | undefined, unit = "") {
-  if (v === null || v === undefined) return "—";
-  return `${v}${unit}`;
+function keyStats(p: Polymer) {
+  const v = (key: VKey, unit: string) => ({ value: valueText(p, key, unit), ok: isVerified(p, key) as boolean | null });
+  return [
+    { label: "Cont. use", term: "contUse", ...v("contUseC", "°C") },
+    { label: "HDT 1.8 MPa", term: "hdt", ...v("hdtC", "°C") },
+    { label: "Tensile", term: "tensile", ...v("tensileMPa", "MPa") },
+    p.modulusGPa !== null
+      ? { label: "Modulus", term: "modulus", ...v("modulusGPa", "GPa") }
+      : { label: "Hardness", term: "hardness", value: p.hardness?.split(" ")[0] ?? "—", ok: isVerified(p, "hardness") as boolean | null },
+    { label: "Density", term: "density", ...v("density", "g/cm³") },
+    { label: "Cost", term: "cost", value: "$".repeat(p.costTier), ok: null },
+  ] satisfies { label: string; term: TermKey; value: string; ok: boolean | null }[];
 }
 
-function keyStats(p: Polymer) {
-  return [
-    { label: "Cont. use", term: "contUse", value: fmt(p.contUseC, " °C") },
-    { label: "HDT 1.8 MPa", term: "hdt", value: fmt(p.hdtC, " °C") },
-    { label: "Tensile", term: "tensile", value: fmt(p.tensileMPa, " MPa") },
-    p.modulusGPa !== null
-      ? { label: "Modulus", term: "modulus", value: fmt(p.modulusGPa, " GPa") }
-      : { label: "Hardness", term: "hardness", value: p.hardness?.split(" ")[0] ?? "—" },
-    { label: "Density", term: "density", value: fmt(p.density, " g/cm³") },
-    { label: "Cost", term: "cost", value: "$".repeat(p.costTier) },
-  ] satisfies { label: string; term: TermKey; value: string }[];
+/** ✓ for values from the reference datasheet; "typ." for older typical values not yet tied to a datasheet. */
+function Mark({ ok }: { ok: boolean | null }) {
+  if (ok === null) return null;
+  return ok ? (
+    <span className="ml-1 align-super text-[10px] font-bold text-[#1a5c2a]" title="From the reference-grade datasheet (see Details)">
+      ✓
+    </span>
+  ) : (
+    <span className="ml-1 align-super text-[9px] font-medium text-[var(--faint)]" title="Typical value, not verified against a datasheet">
+      typ.
+    </span>
+  );
 }
 
 function SectionHeading({ children, right }: { children: ReactNode; right?: ReactNode }) {
@@ -150,7 +163,10 @@ function ResultCard({
             <dt className="text-[11px] text-[var(--subtle)]">
               <Term k={s.term}>{s.label}</Term>
             </dt>
-            <dd className="text-[14px] font-semibold tabular-nums text-[var(--foreground)]">{s.value}</dd>
+            <dd className={`text-[14px] font-semibold tabular-nums ${s.ok === false ? "text-[var(--subtle)]" : "text-[var(--foreground)]"}`}>
+              {s.value}
+              <Mark ok={s.ok} />
+            </dd>
           </div>
         ))}
       </dl>
@@ -213,6 +229,7 @@ function ResultCard({
 function Details({ p }: { p: Polymer }) {
   return (
     <div className="mt-4 border-t border-[var(--border)] pt-4 text-[14px]">
+      <ReferenceGrade p={p} />
       <WatchOuts p={p} />
       <PracticalReading p={p} />
       <div className="mt-5 grid gap-6 md:grid-cols-2">
@@ -226,6 +243,7 @@ function Details({ p }: { p: Polymer }) {
           <h4 className={`mb-1.5 ${LABEL}`}>
             <Term k="chem">Chemical resistance</Term>
           </h4>
+          <p className="mb-1.5 text-[11px] text-[var(--faint)]">General guidance, not from a specific datasheet</p>
           <table className="w-full text-[13px]">
             <tbody>
               {(Object.keys(CHEM_LABELS) as ChemKey[]).map((k) => (
@@ -245,6 +263,7 @@ function Details({ p }: { p: Polymer }) {
         </div>
         <div>
           <h4 className={`mb-1.5 ${LABEL}`}>Sterilization</h4>
+          <p className="mb-1 text-[11px] text-[var(--faint)]">General guidance; gamma checked against Nordion&apos;s compatibility guide</p>
           <div className="flex flex-wrap gap-x-4 text-[13px] text-[var(--muted)]">
             <span>
               <Term k="steam">Steam</Term>: <b className={compatTone[p.sterilization.autoclave]}>{compatText[p.sterilization.autoclave]}</b>
@@ -259,23 +278,113 @@ function Details({ p }: { p: Polymer }) {
         </div>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[13px]">
           <Row k="Structure" term="structure" v={p.structure} />
-          <Row k="Tg / Tm" term="tgtm" v={`${fmt(p.tgC, " °C")} / ${fmt(p.tmC, " °C")}`} />
-          <Row k="Elongation" term="elongation" v={fmt(p.elongationPct, " %")} />
-          {p.hardness && <Row k="Hardness" term="hardness" v={p.hardness} />}
-          <Row k="Water abs. (24 h)" term="water" v={fmt(p.waterAbsPct, " %")} />
+          <Row k="Tg" term="tgtm" v={valueText(p, "tgC", "°C")} ok={isVerified(p, "tgC")} />
+          <Row k="Tm" term="tgtm" v={valueText(p, "tmC", "°C")} ok={isVerified(p, "tmC")} />
+          <Row k="Elongation at break" term="elongation" v={valueText(p, "elongationPct", "%")} ok={isVerified(p, "elongationPct")} />
+          {p.hardness && <Row k="Hardness" term="hardness" v={p.hardness} ok={isVerified(p, "hardness")} />}
+          <Row k="Water abs. (24 h)" term="water" v={valueText(p, "waterAbsPct", "%")} ok={isVerified(p, "waterAbsPct")} />
           <Row k="Transparency" term="transparency" v={p.transparency[0].toUpperCase() + p.transparency.slice(1)} />
-          <Row k="UL94 (base)" term="ul94" v={p.ul94} />
-          <Row k="UV / weathering" term="uv" v={`${RATING_LABELS[p.uv]} (unstabilized)`} />
-          <Row k="Grades" term="grades" v={[p.medical && "Medical", p.food && "Food contact"].filter(Boolean).join(", ") || "—"} />
+          <Row k="UL94" term="ul94" v={p.ul94} ok={isVerified(p, "ul94")} />
+          <Row k="UV / weathering" term="uv" v={`${RATING_LABELS[p.uv]} (unstabilized, general guidance)`} />
           <Row k="Processing" term="processes" v={p.processes.join(", ")} />
           <Row k="Also known as" term="aka" v={p.aka.join(", ")} />
-          <Row k="Data basis" term="basis" v={p.grade} />
         </dl>
         <ProcessingBlock pr={p.processing} elastomer={p.structure === "Elastomer" && p.processes.some((x) => /compression|transfer/i.test(x))} />
       </div>
       </div>
+      <GuideSections p={p} />
       <KnowledgeCheck p={p} />
       <FieldNotes p={p} />
+    </div>
+  );
+}
+
+function ReferenceGrade({ p }: { p: Polymer }) {
+  const r = REFS[p.id];
+  if (!r) return null;
+  const rows: [string, string][] = [];
+  const add = (label: string, f: { v: number | [number, number]; std: string; atLeast?: boolean } | undefined, unit: string) => {
+    if (f) rows.push([label, `${fmtVal(f.v, unit, f.atLeast)} · ${f.std}`]);
+  };
+  add("Density", r.density, "g/cm³");
+  if (r.tensile) rows.push([`Tensile (${r.tensile.what === "strength" ? "strength, not stated as yield or break" : r.tensile.what})`, `${fmtVal(r.tensile.v, "MPa")} · ${r.tensile.std}`]);
+  add("Tensile modulus", r.modulus, "MPa");
+  add("Elongation at break", r.elongation, "%");
+  add("HDT 1.8 MPa", r.hdt, "°C");
+  add("Tg", r.tg, "°C");
+  add("Tm", r.tm, "°C");
+  add("Water abs. 24 h", r.water24h, "%");
+  add("Max. service temp.", r.contUse, "°C");
+  if (r.ul94) rows.push(["Flammability", `${r.ul94.v} · ${r.ul94.std}`]);
+  if (r.hardness) rows.push(["Hardness", `${r.hardness.v} · ${r.hardness.std}`]);
+  return (
+    <div className="mb-4 rounded-lg border border-[#cfe8cf] bg-[#f4fbf4] px-4 py-3">
+      <h4 className="mb-1 flex flex-wrap items-baseline gap-x-2 text-[13px] font-bold text-[#1a5c2a]">
+        <span aria-hidden>✓</span> Reference datasheet:{" "}
+        <a href={r.src.url} target="_blank" rel="noreferrer" className="underline decoration-[#9fd09f] underline-offset-2 hover:text-[#0f3d1a]">
+          {r.grade}
+        </a>
+      </h4>
+      <p className="mb-2 text-[12px] leading-[1.6] text-[#2f5d3a]">
+        {r.kind === "stock"
+          ? "No named grade could be opened, so these are a supplier's stock-shape values. "
+          : r.kind === "report"
+            ? "Values from the compound's published test report. "
+            : ""}
+        Card values marked ✓ come from this {r.kind === "report" ? "report" : "datasheet"}; values marked <i>typ.</i> are typical figures not yet tied to a
+        source.
+        {r.note && ` ${r.note}`}
+      </p>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[12px]">
+        {rows.map(([k, v]) => (
+          <Fragment key={k}>
+            <dt className="text-[#2f5d3a]">{k}</dt>
+            <dd className="min-w-0 break-words text-[#14361f]">{v}</dd>
+          </Fragment>
+        ))}
+      </dl>
+      {r.other && r.other.length > 0 && <p className="mt-1.5 text-[12px] leading-[1.6] text-[#2f5d3a]">Also on the datasheet: {r.other.join(" · ")}</p>}
+    </div>
+  );
+}
+
+function ItemList({ items }: { items: Item[] }) {
+  return (
+    <ul className="space-y-1.5">
+      {items.map((it) => (
+        <li key={it.text} className="text-[13px] leading-[1.6] text-[var(--muted)]">
+          {it.text}{" "}
+          <a href={it.src.url} target="_blank" rel="noreferrer" className="break-words text-[12px] text-[var(--accent)] hover:underline">
+            [{it.src.label}]
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function GuideSections({ p }: { p: Polymer }) {
+  const thermoset = p.structure === "Elastomer" && !["tpu", "tpv", "tpc", "peba"].includes(p.id);
+  const ric = ricFor(p.id);
+  const sections: [string, Item[]][] = [
+    ["Design for molding", designFor(p.id, p.structure === "Elastomer")],
+    ["Snap-fit strain", snapFitFor(p.id)],
+    ["Joining", joiningFor(p.id, p.structure, thermoset)],
+    ["Optical", opticalFor(p.id)],
+    ["Medical & food-contact grades", medicalFor(p.id)],
+    ["Known stress-cracking agents", escFor(p.id)],
+    ["Recycling", ric ? [ric] : []],
+  ];
+  const shown = sections.filter(([, items]) => items.length > 0);
+  if (shown.length === 0) return null;
+  return (
+    <div className="mt-6 grid gap-x-6 gap-y-5 border-t border-[var(--border)] pt-4 md:grid-cols-2">
+      {shown.map(([title, items]) => (
+        <div key={title}>
+          <h4 className={`mb-1.5 ${LABEL}`}>{title}</h4>
+          <ItemList items={items} />
+        </div>
+      ))}
     </div>
   );
 }
@@ -302,7 +411,7 @@ function KnowledgeCheck({ p }: { p: Polymer }) {
       </div>
       {open && (
         <div className="mt-3">
-          <p className="mb-3 text-[12px] leading-[1.6] text-[var(--subtle)]">Answers come straight from this material&apos;s data above.</p>
+          <p className="mb-3 text-[12px] leading-[1.6] text-[var(--subtle)]">Every answer comes from the reference datasheet linked at the top of these details.</p>
           <ol className="space-y-4">
             {questions.map((q, qi) => {
               const choice = picked[q.id];
@@ -616,11 +725,14 @@ function FieldNoteForm({ p, onClose }: { p: Polymer; onClose: () => void }) {
   );
 }
 
-function Row({ k, v, term }: { k: string; v: string; term?: TermKey }) {
+function Row({ k, v, term, ok }: { k: string; v: string; term?: TermKey; ok?: boolean }) {
   return (
     <>
       <dt className="text-[var(--subtle)]">{term ? <Term k={term}>{k}</Term> : k}</dt>
-      <dd className="text-[var(--foreground)]">{v}</dd>
+      <dd className={ok === false ? "text-[var(--subtle)]" : "text-[var(--foreground)]"}>
+        {v}
+        {ok !== undefined && <Mark ok={ok} />}
+      </dd>
     </>
   );
 }
@@ -643,18 +755,29 @@ function ListBlock({ title, items }: { title: string; items: string[] }) {
 
 /* ───────────────────────────── Comparison table ───────────────────────────── */
 
+function vt(p: Polymer, key: VKey, unit: string) {
+  const ok = isVerified(p, key);
+  return (
+    <span className={ok ? undefined : "text-[var(--subtle)]"}>
+      {valueText(p, key, unit)}
+      <Mark ok={ok} />
+    </span>
+  );
+}
+
 function CompareTable({ polymers, onRemove, onClear }: { polymers: Polymer[]; onRemove: (id: string) => void; onClear: () => void }) {
   const rows: { label: string; term?: TermKey; get: (p: Polymer) => ReactNode }[] = [
     { label: "Family", term: "family", get: (p) => p.family },
     { label: "Structure", term: "structure", get: (p) => p.structure },
-    { label: "Continuous use", term: "contUse", get: (p) => fmt(p.contUseC, " °C") },
-    { label: "HDT @ 1.8 MPa", term: "hdt", get: (p) => fmt(p.hdtC, " °C") },
-    { label: "Tg / Tm", term: "tgtm", get: (p) => `${fmt(p.tgC, " °C")} / ${fmt(p.tmC, " °C")}` },
-    { label: "Tensile strength", term: "tensile", get: (p) => fmt(p.tensileMPa, " MPa") },
-    { label: "Modulus / hardness", term: "modulus", get: (p) => (p.modulusGPa !== null ? fmt(p.modulusGPa, " GPa") : p.hardness ?? "—") },
-    { label: "Elongation", term: "elongation", get: (p) => fmt(p.elongationPct, " %") },
-    { label: "Density", term: "density", get: (p) => fmt(p.density, " g/cm³") },
-    { label: "Water abs. (24 h)", term: "water", get: (p) => fmt(p.waterAbsPct, " %") },
+    { label: "Continuous use", term: "contUse", get: (p) => vt(p, "contUseC", "°C") },
+    { label: "HDT @ 1.8 MPa", term: "hdt", get: (p) => vt(p, "hdtC", "°C") },
+    { label: "Tg", term: "tgtm", get: (p) => vt(p, "tgC", "°C") },
+    { label: "Tm", term: "tgtm", get: (p) => vt(p, "tmC", "°C") },
+    { label: "Tensile strength", term: "tensile", get: (p) => vt(p, "tensileMPa", "MPa") },
+    { label: "Modulus / hardness", term: "modulus", get: (p) => (p.modulusGPa !== null ? vt(p, "modulusGPa", "GPa") : vt(p, "hardness", "")) },
+    { label: "Elongation", term: "elongation", get: (p) => vt(p, "elongationPct", "%") },
+    { label: "Density", term: "density", get: (p) => vt(p, "density", "g/cm³") },
+    { label: "Water abs. (24 h)", term: "water", get: (p) => vt(p, "waterAbsPct", "%") },
     { label: "Transparency", term: "transparency", get: (p) => p.transparency[0].toUpperCase() + p.transparency.slice(1) },
     { label: "Steam autoclave", term: "steam", get: (p) => <b className={compatTone[p.sterilization.autoclave]}>{compatText[p.sterilization.autoclave]}</b> },
     { label: "Gamma", term: "gamma", get: (p) => <b className={compatTone[p.sterilization.gamma]}>{compatText[p.sterilization.gamma]}</b> },
@@ -668,7 +791,8 @@ function CompareTable({ polymers, onRemove, onClear }: { polymers: Polymer[]; on
         </span>
       ),
     })),
-    { label: "UL94 (base grade)", term: "ul94", get: (p) => p.ul94 },
+    { label: "UL94", term: "ul94", get: (p) => vt(p, "ul94", "") },
+    { label: "Reference grade", term: "basis", get: (p) => (REFS[p.id] ? <a href={REFS[p.id].src.url} target="_blank" rel="noreferrer" className="text-[var(--accent)] hover:underline">{REFS[p.id].grade}</a> : "—") },
     {
       label: "UV / weathering",
       term: "uv",

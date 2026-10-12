@@ -11,6 +11,8 @@
  *   E = excellent, G = good, F = fair / limited, P = poor / not recommended
  */
 
+import { applyRefs } from './verified';
+
 export type Rating = 'E' | 'G' | 'F' | 'P';
 export type Compat = 'yes' | 'limited' | 'no';
 export type Transparency = 'clear' | 'translucent' | 'opaque';
@@ -96,6 +98,8 @@ export interface Polymer {
   processing: Processing;
   /** Design and manufacturing pitfalls engineers commonly run into */
   watchOuts: string[];
+  /** Card values taken from the reference-grade datasheet (set by applyRefs), as display text */
+  verified?: Partial<Record<import('./verified').VKey, string>>;
 }
 
 export const POLYMERS: Polymer[] = [
@@ -2396,6 +2400,9 @@ export const POLYMERS: Polymer[] = [
     ],
   },
 ];
+
+// Replace typical values with the reference-grade datasheet values where published (see refs.ts).
+applyRefs(POLYMERS);
 
 /** Text that represents each polymer for the embedding model (kept short: MiniLM truncates long input). */
 export function polymerDocText(p: Polymer): string {

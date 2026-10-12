@@ -119,10 +119,11 @@ export const GLOSSARY = {
   },
   aka: { term: 'Also known as', text: 'Other abbreviations and well-known trade names for the same polymer family. Trade-name grades differ, so treat these as pointers, not equivalents.' },
   basis: {
-    term: 'Data basis',
-    text: 'The type of grade the numbers on this card represent. Values are typical, from datasheets and reference tables; real grades can differ by 20–50%.',
-    tip: 'Use these numbers to shortlist, then design from the supplier datasheet for the exact grade.',
+    term: 'Reference grade',
+    text: 'The named commercial grade whose datasheet the ✓ values come from, linked in each material’s details. Values marked “typ.” are older typical figures not yet tied to a datasheet.',
+    tip: 'Other grades of the same polymer can differ by 20–50 %. Design from the datasheet of the exact grade you will buy.',
   },
+
   shrink: {
     term: 'Mold shrinkage',
     text: 'How much a molded part shrinks from the cavity size as it cools, as a linear percentage (ASTM D955 / ISO 294-4). The tool is cut oversize by this amount.',

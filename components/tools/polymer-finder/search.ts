@@ -235,8 +235,9 @@ export function checkConstraint(p: Polymer, c: Constraint): Check {
       return r('fail', `Poor vs ${name}`);
     }
     case 'flame':
-      if (p.ul94 === 'V-0') return r('pass', 'Inherently UL94 V-0');
-      return r('warn', `Base grade ${p.ul94}; check for FR grades`);
+      if (p.ul94 === 'V-0') return r('pass', 'UL94 V-0');
+      if (/V-0/.test(p.ul94)) return r('pass', `UL94 ${p.ul94}`);
+      return r('warn', `Reference grade ${p.ul94}; check for FR grades`);
     case 'food':
       return p.food ? r('pass', 'Food-contact grades available') : r('fail', 'Food-contact grades uncommon');
     case 'medical':
