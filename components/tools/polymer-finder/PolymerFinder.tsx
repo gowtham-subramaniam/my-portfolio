@@ -15,6 +15,7 @@ import {
 import PropertyChart, { type PointStatus } from "./PropertyChart";
 import { FIELD_NOTE_CATEGORIES, notesFor, type FieldNoteCategory } from "./fieldNotes";
 import { ALL_SOURCES, sourcesFor } from "./sources";
+import { ALL_READING, readingFor } from "./reading";
 import {
   MODEL_ID,
   getDocEmbeddings,
@@ -210,6 +211,7 @@ function Details({ p }: { p: Polymer }) {
   return (
     <div className="mt-4 border-t border-[var(--border)] pt-4 text-[14px]">
       <WatchOuts p={p} />
+      <PracticalReading p={p} />
       <div className="mt-5 grid gap-6 md:grid-cols-2">
       <div className="space-y-4">
         <ListBlock title="Strengths" items={p.strengths} />
@@ -299,6 +301,27 @@ function WatchOuts({ p }: { p: Polymer }) {
         ))}
         . Points without a named source are general engineering guidance.
       </p>
+    </div>
+  );
+}
+
+function PracticalReading({ p }: { p: Polymer }) {
+  const items = readingFor(p.id);
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-4">
+      <h4 className={`mb-1.5 ${LABEL}`}>Practical reading</h4>
+      <ul className="space-y-1.5">
+        {items.map((r) => (
+          <li key={r.url} className="text-[13px] leading-[1.55]">
+            <a href={r.url} target="_blank" rel="noreferrer" className="font-semibold text-[var(--accent)] hover:underline">
+              {r.title}
+            </a>
+            <span className="text-[var(--subtle)]"> · {r.source}</span>
+            <div className="text-[var(--muted)]">{r.note}</div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -1030,6 +1053,19 @@ export default function PolymerFinder() {
           noted under &ldquo;Data basis&rdquo;; real grades vary widely. Chemical ratings assume room temperature and no applied
           stress. Confirm with supplier datasheets and test in your application.
         </p>
+        <details className="mt-2">
+          <summary className="cursor-pointer">Practical reading ({ALL_READING.length})</summary>
+          <ul className="mt-2 space-y-1.5">
+            {ALL_READING.map((r) => (
+              <li key={r.url}>
+                <a href={r.url} target="_blank" rel="noreferrer" className="text-[var(--accent)] hover:underline">
+                  {r.title}
+                </a>{" "}
+                · {r.source}. {r.note}
+              </li>
+            ))}
+          </ul>
+        </details>
         <details className="mt-2">
           <summary className="cursor-pointer">References ({ALL_SOURCES.length})</summary>
           <ul className="mt-2 space-y-1">
