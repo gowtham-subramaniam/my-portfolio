@@ -303,11 +303,12 @@ function ReferenceGrade({ p }: { p: Polymer }) {
   const r = REFS[p.id];
   if (!r) return null;
   const rows: [string, string][] = [];
-  const add = (label: string, f: { v: number | [number, number]; std: string; atLeast?: boolean } | undefined, unit: string) => {
-    if (f) rows.push([label, `${fmtVal(f.v, unit, f.atLeast)} · ${f.std}`]);
+  const dag = (f?: { alt?: boolean }) => (f?.alt ? " †" : "");
+  const add = (label: string, f: { v: number | [number, number]; std: string; atLeast?: boolean; alt?: boolean } | undefined, unit: string) => {
+    if (f) rows.push([label, `${fmtVal(f.v, unit, f.atLeast)} · ${f.std}${dag(f)}`]);
   };
   add("Density", r.density, "g/cm³");
-  if (r.tensile) rows.push([`Tensile (${r.tensile.what === "strength" ? "strength, not stated as yield or break" : r.tensile.what})`, `${fmtVal(r.tensile.v, "MPa")} · ${r.tensile.std}`]);
+  if (r.tensile) rows.push([`Tensile (${r.tensile.what === "strength" ? "strength, not stated as yield or break" : r.tensile.what})`, `${fmtVal(r.tensile.v, "MPa")} · ${r.tensile.std}${dag(r.tensile)}`]);
   add("Tensile modulus", r.modulus, "MPa");
   add("Elongation at break", r.elongation, "%");
   add("HDT 1.8 MPa", r.hdt, "°C");
@@ -315,8 +316,8 @@ function ReferenceGrade({ p }: { p: Polymer }) {
   add("Tm", r.tm, "°C");
   add("Water abs. 24 h", r.water24h, "%");
   add("Max. service temp.", r.contUse, "°C");
-  if (r.ul94) rows.push(["Flammability", `${r.ul94.v} · ${r.ul94.std}`]);
-  if (r.hardness) rows.push(["Hardness", `${r.hardness.v} · ${r.hardness.std}`]);
+  if (r.ul94) rows.push(["Flammability", `${r.ul94.v} · ${r.ul94.std}${dag(r.ul94)}`]);
+  if (r.hardness) rows.push(["Hardness", `${r.hardness.v} · ${r.hardness.std}${dag(r.hardness)}`]);
   return (
     <div className="mb-4 rounded-lg border border-[#cfe8cf] bg-[#f4fbf4] px-4 py-3">
       <h4 className="mb-1 flex flex-wrap items-baseline gap-x-2 text-[13px] font-bold text-[#1a5c2a]">
@@ -343,7 +344,16 @@ function ReferenceGrade({ p }: { p: Polymer }) {
           </Fragment>
         ))}
       </dl>
-      {r.other && r.other.length > 0 && <p className="mt-1.5 text-[12px] leading-[1.6] text-[#2f5d3a]">Also on the datasheet: {r.other.join(" · ")}</p>}
+      {r.other && r.other.length > 0 && <p className="mt-1.5 text-[12px] leading-[1.6] text-[#2f5d3a]">Also published: {r.other.join(" · ")}</p>}
+      {r.alt && (
+        <p className="mt-1 text-[12px] leading-[1.6] text-[#2f5d3a]">
+          † Not in the manufacturer document above; from{" "}
+          <a href={r.alt.url} target="_blank" rel="noreferrer" className="underline decoration-[#9fd09f] underline-offset-2">
+            {r.alt.label}
+          </a>
+          , which publishes the manufacturer&apos;s data.
+        </p>
+      )}
     </div>
   );
 }
@@ -1013,6 +1023,10 @@ export default function PolymerFinder() {
           exposure are checked against {POLYMERS.length} engineering polymers, then the candidates are ranked by how well they
           fit your description.
         </p>
+        <p className="mt-3 max-w-[620px] text-[13px] leading-[1.6] text-[var(--subtle)]">
+          For screening only. Values marked ✓ come from the manufacturer documents linked in each material&apos;s details; always
+          confirm with the datasheet for the exact grade you use. <a href="#pf-notice" className="text-[var(--accent)] hover:underline">About this data</a>
+        </p>
       </header>
 
       {/* Search */}
@@ -1216,11 +1230,31 @@ export default function PolymerFinder() {
           <b className="text-[var(--foreground)]">Know something the datasheets don&apos;t say?</b> Open any material&apos;s details and use
           &ldquo;Share your experience&rdquo; to send a field note. Notes are reviewed before they&apos;re published.
         </p>
-        <p>
-          <b className="text-[var(--muted)]">Screening aid only.</b> Values are typical for a representative unfilled grade unless
-          noted under &ldquo;Data basis&rdquo;; real grades vary widely. Chemical ratings assume room temperature and no applied
-          stress. Confirm with supplier datasheets and test in your application.
-        </p>
+        <section id="pf-notice" aria-label="About this data" className="scroll-mt-28 space-y-2">
+          <h2 className="text-[14px] font-bold text-[var(--muted)]">About this data</h2>
+          <p>
+            <b className="text-[var(--muted)]">Screening aid, not design data.</b> Values marked ✓ are typical values copied from the
+            manufacturer or supplier document linked in each material&apos;s details, with its test standard. Values marked
+            &ldquo;typ.&rdquo; are general typical figures not yet tied to a source. Chemical, sterilization and UV ratings are general
+            guidance and assume room temperature and no applied stress. Other grades of the same polymer can differ widely.
+          </p>
+          <p>
+            <b className="text-[var(--muted)]">No warranty.</b> This tool is provided as is, without any warranty of accuracy or fitness for
+            a purpose. Always design from the current datasheet for the exact grade you will use, and test parts in your application.
+            Nothing here is a recommendation for a regulated use; medical and food-contact suitability belongs to specific grades and must
+            be confirmed with the supplier.
+          </p>
+          <p>
+            <b className="text-[var(--muted)]">Trademarks.</b> Trade names such as Makrolon, Delrin, Zytel, Ultem, VICTREX, Teflon and
+            others are trademarks of their respective owners and are used only to identify the products that the data describes. This site
+            is not affiliated with, sponsored or endorsed by any material supplier.
+          </p>
+          <p>
+            <b className="text-[var(--muted)]">Sources.</b> Only publicly available documents are cited, and only individual values are
+            quoted, each with a link to the original. If you own a document cited here and would like a change, please use the{" "}
+            <a href="/contact" className="text-[var(--accent)] hover:underline">contact page</a>.
+          </p>
+        </section>
         <details className="mt-2">
           <summary className="cursor-pointer">Practical reading ({ALL_READING.length})</summary>
           <ul className="mt-2 space-y-1.5">

@@ -17,6 +17,8 @@ export interface Field {
   std: string;
   /** Value is a lower bound, e.g. "> 50 %" */
   atLeast?: boolean;
+  /** Taken from the secondary source (Ref.alt) because the primary document doesn't give it */
+  alt?: boolean;
 }
 
 export interface Ref {
@@ -24,6 +26,8 @@ export interface Ref {
   /** "grade" = named commercial grade; "stock" = supplier stock-shape sheet without a grade; "report" = compound test report */
   kind: "grade" | "stock" | "report";
   src: { label: string; url: string };
+  /** Secondary source for values the primary (manufacturer) document doesn't give */
+  alt?: { label: string; url: string };
   density?: Field; // g/cm³
   tensile?: Field & { what: "yield" | "break" | "strength" }; // MPa
   modulus?: Field; // MPa
@@ -33,8 +37,8 @@ export interface Ref {
   tm?: Field; // °C
   water24h?: Field; // %, 24 h immersion only
   contUse?: Field; // °C, only where a UL 746B RTI or stated service temperature is published
-  ul94?: { v: string; std: string };
-  hardness?: { v: string; std: string };
+  ul94?: { v: string; std: string; alt?: boolean };
+  hardness?: { v: string; std: string; alt?: boolean };
   /** Strain at yield, %, where published (used for the snap-fit rule) */
   yieldStrain?: number;
   /** Other published values worth showing (as printed) */
@@ -45,6 +49,7 @@ export interface Ref {
 const PSI = 0.0068948;
 const psi = (x: number) => +(x * PSI).toFixed(1);
 const f2c = (x: number) => +(((x - 32) * 5) / 9).toFixed(1);
+const INEOS_PF = { label: "INEOS Styrolution styrenics product portfolio (EMEA)", url: "https://www.ineos.com/globalassets/contentonthispageorblock/ineos-styrolution-styrenics-product-portfolio-emea.pdf" };
 const MDC = "CAMPUS / materialdatacenter.com";
 
 export const REFS: Record<string, Ref> = {
@@ -100,16 +105,17 @@ export const REFS: Record<string, Ref> = {
   },
   hips: {
     grade: "Styrolution PS 486N (INEOS Styrolution)",
-    yieldStrain: 1.5,
     kind: "grade",
-    src: { label: `Styrolution PS 486N (${MDC})`, url: "https://www.materialdatacenter.com/ms/en/Styrolution%20PS/INEOS+Styrolution/Styrolution%C2%AE+PS+486N/906dd48b/6541" },
-    density: { v: 1.04, std: "ISO 1183" },
+    yieldStrain: 1.5,
+    src: INEOS_PF,
+    alt: { label: "Styrolution PS 486N (CAMPUS / materialdatacenter.com)", url: "https://www.materialdatacenter.com/ms/en/Styrolution%20PS/INEOS+Styrolution/Styrolution%C2%AE+PS+486N/906dd48b/6541" },
+    density: { v: 1.04, std: "ISO 1183", alt: true },
     modulus: { v: 1800, std: "ISO 527" },
-    tensile: { v: 24, std: "ISO 527", what: "yield" },
-    elongation: { v: 35, std: "ISO 527, nominal" },
-    hdt: { v: 74, std: "ISO 75-1/-2" },
-    ul94: { v: "HB", std: "IEC 60695-11-10, 1.5 and 3.0 mm" },
-    other: ["Yield strain 1.5 % (ISO 527)"],
+    tensile: { v: 24, std: "ISO 527", what: "yield", alt: true },
+    elongation: { v: 35, std: "ISO 527" },
+    hdt: { v: 74, std: "ISO 75-1/-2", alt: true },
+    ul94: { v: "HB", std: "IEC 60695-11-10, 1.5 and 3.0 mm", alt: true },
+    other: ["Vicat B 90 °C (ISO 306)", "Yield strain 1.5 % (CAMPUS)"],
   },
   pvc: {
     grade: "Rigid PVC stock shapes (no grade stated)",
@@ -124,30 +130,31 @@ export const REFS: Record<string, Ref> = {
   },
   abs: {
     grade: "Terluran GP-35 (INEOS Styrolution)",
-    yieldStrain: 2.4,
     kind: "grade",
-    src: { label: `Terluran GP-35 (${MDC})`, url: "https://materialdatacenter.com/ms/en/Terluran/INEOS+Styrolution/Terluran%C2%AE+GP-35/d4a7a7cd/367" },
-    density: { v: 1.04, std: "ISO 1183" },
+    yieldStrain: 2.4,
+    src: INEOS_PF,
+    alt: { label: "Terluran GP-35 (CAMPUS / materialdatacenter.com)", url: "https://materialdatacenter.com/ms/en/Terluran/INEOS+Styrolution/Terluran%C2%AE+GP-35/d4a7a7cd/367" },
+    density: { v: 1.04, std: "ISO 1183", alt: true },
     modulus: { v: 2300, std: "ISO 527" },
-    tensile: { v: 44, std: "ISO 527", what: "yield" },
-    elongation: { v: 12, std: "ISO 527, nominal" },
+    tensile: { v: 44, std: "ISO 527", what: "yield", alt: true },
+    elongation: { v: 12, std: "ISO 527, nominal", alt: true },
     hdt: { v: 92, std: "ISO 75-1/-2" },
-    ul94: { v: "HB", std: "IEC 60695-11-10, 1.5 and 3.0 mm" },
+    ul94: { v: "HB", std: "IEC 60695-11-10, 1.5 and 3.0 mm", alt: true },
     other: ["Yield strain 2.4 % (ISO 527)", "Vicat B 95 °C (ISO 306)"],
   },
   pc: {
     grade: "Makrolon 2405 (Covestro)",
-    yieldStrain: 6,
     kind: "grade",
-    src: { label: `Makrolon 2405 (${MDC})`, url: "https://materialdatacenter.com/ms/en/Makrolon/Covestro+Deutschland+AG/Makrolon%C2%AE+2405/986598f8/410" },
-    density: { v: 1.2, std: "ISO 1183" },
-    modulus: { v: 2400, std: "ISO 527" },
-    tensile: { v: 65, std: "ISO 527", what: "yield" },
-    elongation: { v: 125, std: "ISO 527" },
+    yieldStrain: 6,
+    src: { label: "Covestro, Makrolon 2405 product page", url: "https://solutions.covestro.com/en/products/makrolon/makrolon-2405_00945088-00009643" },
+    density: { v: 1.2, std: "ISO 1183-1" },
+    modulus: { v: 2400, std: "ISO 527, 1 mm/min" },
+    tensile: { v: 65, std: "ISO 527, 50 mm/min", what: "yield" },
+    elongation: { v: 125, std: "ISO 527, 50 mm/min" },
     hdt: { v: 124, std: "ISO 75-1/-2" },
     tg: { v: 144, std: "ISO 11357, 10 °C/min" },
-    ul94: { v: "V-2 at 0.4 mm", std: "IEC 60695-11-10" },
-    other: ["Yield strain 6 % (ISO 527)", "Stress at break 65 MPa (ISO 527)"],
+    ul94: { v: "V-2 at 0.36 and 0.75 mm; HB at 2.7 mm", std: "UL 94" },
+    other: ["Yield strain 6 % (ISO 527)", "Stress at break 65 MPa", "Nominal strain at break > 50 %"],
   },
   pcabs: {
     grade: "Cycoloy C1200HF (SABIC)",
@@ -227,16 +234,17 @@ export const REFS: Record<string, Ref> = {
     other: ["Conditioned: modulus 1200 MPa, yield 45 MPa at 20 %", "Water absorption 9.5 %, humidity absorption 3 % (similar to ISO 62)"],
   },
   pa66: {
-    grade: "Ultramid A3K FC R01 (BASF), dry as molded",
-    yieldStrain: 5,
+    grade: "Ultramid A3K (BASF), dry as molded",
     kind: "grade",
-    src: { label: `Ultramid A3K FC R01 (${MDC})`, url: "https://materialdatacenter.com/ms/en/Ultramid%20A/BASF/Ultramid%C2%AE+A3K+FC+R01/4dac76e9/371" },
+    yieldStrain: 4.5,
+    src: { label: "BASF, Ultramid A3K product information", url: "https://download.basf.com/p1/8a8082587fd4b608017fd64108ab6d3b/en/ULTRAMID_A3K_Product_Data_Sheet_Asia_PacificEurope_English.pdf" },
     density: { v: 1.13, std: "ISO 1183" },
-    modulus: { v: 3000, std: "ISO 527, dry" },
-    tensile: { v: 85, std: "ISO 527, dry", what: "yield" },
-    hdt: { v: 75, std: "ISO 75-1/-2, dry" },
-    tm: { v: 260, std: "ISO 11357, 10 °C/min" },
-    other: ["Yield strain 5 % (ISO 527, dry)", "Water absorption 8.5 %, humidity absorption 2.8 % (similar to ISO 62)"],
+    modulus: { v: 3000, std: "ISO 527-1/-2, dry" },
+    tensile: { v: 85, std: "ISO 527-1/-2, dry, 50 mm/min", what: "yield" },
+    elongation: { v: 30, std: "ISO 527-1/-2, dry, nominal" },
+    hdt: { v: 75, std: "ISO 75, method A" },
+    tm: { v: 260, std: "DSC" },
+    other: ["Yield strain 4.5 % (dry)", "Conditioned: modulus 1100 MPa, yield 50 MPa at 20 %", "Water absorption at saturation 8–9 %; moisture at 23 °C/50 % RH 2.5–3.1 %"],
   },
   pa12: {
     grade: "VESTAMID L1940 (Evonik), dry",
@@ -464,13 +472,14 @@ export const REFS: Record<string, Ref> = {
   san: {
     grade: "Luran 358N (INEOS Styrolution)",
     kind: "grade",
-    src: { label: `Luran 358N (${MDC})`, url: "https://www.materialdatacenter.com/ms/en/Luran/INEOS+Styrolution/Luran%C2%AE+358N/238afc86/367" },
-    density: { v: 1.08, std: "ISO 1183" },
+    src: INEOS_PF,
+    alt: { label: "Luran 358N (CAMPUS / materialdatacenter.com)", url: "https://www.materialdatacenter.com/ms/en/Luran/INEOS+Styrolution/Luran%C2%AE+358N/238afc86/367" },
+    density: { v: 1.08, std: "ISO 1183", alt: true },
     modulus: { v: 3700, std: "ISO 527" },
-    tensile: { v: 72, std: "ISO 527", what: "break" },
+    tensile: { v: 72, std: "ISO 527", what: "break", alt: true },
     elongation: { v: 3, std: "ISO 527" },
-    hdt: { v: 86, std: "ISO 75-1/-2" },
-    other: ["Humidity absorption 0.2 % (similar to ISO 62)"],
+    hdt: { v: 86, std: "ISO 75-1/-2", alt: true },
+    other: ["Vicat B 106 °C (ISO 306)"],
   },
   pla: {
     grade: "Ingeo 3D850 (NatureWorks)",
@@ -485,16 +494,16 @@ export const REFS: Record<string, Ref> = {
   },
   asa: {
     grade: "Luran S 777K (INEOS Styrolution)",
-    yieldStrain: 3.3,
     kind: "grade",
-    src: { label: `Luran S 777K (${MDC})`, url: "https://www.materialdatacenter.com/ms/en/Luran/INEOS+Styrolution/Luran%C2%AE+S+777K/db37c64e/367" },
+    yieldStrain: 3.3,
+    src: { label: "INEOS Styrolution, Luran S 777K product page", url: "https://eshop.ineos-styrolution.com/Product/Luran-S_LURAN-S-777K_SKU400700190193.html" },
     density: { v: 1.07, std: "ISO 1183" },
     modulus: { v: 2300, std: "ISO 527" },
     tensile: { v: 48, std: "ISO 527", what: "yield" },
-    elongation: { v: 50, std: "ISO 527, nominal", atLeast: true },
-    hdt: { v: 97, std: "ISO 75-1/-2" },
-    ul94: { v: "HB", std: "IEC 60695-11-10, 1.5 and 3.0 mm" },
-    other: ["Yield strain 3.3 % (ISO 527)", "Water absorption 1.65 % (similar to ISO 62)"],
+    elongation: { v: 10, std: "ISO 527, nominal" },
+    hdt: { v: 97, std: "ISO 75, method A" },
+    ul94: { v: "HB at 1.5 mm", std: "IEC 60695-11-10" },
+    other: ["Yield strain 3.3 % (ISO 527)", "HDT at 0.45 MPa 101 °C (ISO 75, method B)"],
   },
   pmp: {
     grade: "TPX RT18 (Mitsui Chemicals)",
