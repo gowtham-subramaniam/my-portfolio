@@ -2317,8 +2317,8 @@ export const POLYMERS: Polymer[] = [
       'Thermoplastic elastomer based on EPDM in PP that seals like rubber but molds like plastic. Used for seals, grips and overmolds on PP; watch compression set at temperature.',
     processing: { shrinkPct: [1.0, 2.5], dryC: 80, dryH: 3, meltC: [200, 230], moldC: [10, 50] },
     watchOuts: [
-      "Compression set rises with temperature (one 87A Santoprene grade: 36% after 22 h at 70 °C, 44% after 70 h at 125 °C); test sealing force over time at temperature.",
-      "Dry before molding (80 °C for 3 h to ≤0.08% moisture for a typical Santoprene grade) to avoid splay.",
+      "Compression set rises with temperature; test sealing force over time at your service temperature.",
+      "Dry before molding as the supplier specifies to avoid splay.",
       "Overmold adhesion to PC, ABS or nylon needs grade-specific TPEs; standard TPV only bonds to PP.",
     ],
   },

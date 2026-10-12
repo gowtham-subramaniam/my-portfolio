@@ -42,14 +42,13 @@ const S = {
   },
   topasMed: { label: "TOPAS, Medical grade resin", url: "https://topas.com/medical-grade-resin" },
   eastar: { label: "Eastman, Eastar MN058 product page", url: "https://www.eastman.com/en/products/product-detail/71068566/eastar-copolyester-mn058" },
-  qp1: { label: "Dow Corning QP1-250 datasheet (Protolabs)", url: "https://Protolabs.com/media/xyvi021p/dow-qp1-250.pdf" },
   purell: { label: "LyondellBasell, Purell brochure", url: "https://www.lyondellbasell.com/49313d/globalassets/sites/2021/fakuma/olefins-and-polyolefins/purellconceptbrochure.pdf" },
   ultemHU: { label: "Ultrapolymers, ULTEM HU1000 product page", url: "https://ultrapolymers.com/en-NL/products/100351607-ultem-hu1000" },
   trinseo: { label: "Trinseo, Acrylic medical solutions", url: "https://www.trinseo.com/industries/medical/acrylic-medical-solutions-americas" },
   topasTDS: { label: "TOPAS 6013M-07 datasheet", url: "https://topas.com/wp-content/uploads/2023/05/TDS-6013M-07_e.pdf" },
-  tpx: { label: "TPX RT18 (CAMPUS / materialdatacenter.com)", url: "https://materialdatacenter.com/ms/en/TPX/Mitsui+Chemicals+America%2C+Inc/TPX%C2%AE+RT18/b9677e3d/1656" },
-  eastar6763: { label: "Eastar 6763 datasheet (Protolabs)", url: "https://protolabs.com/media/pzub5tfo/eastar-6763.pdf" },
-  plexi: { label: "PLEXIGLAS 7N (CAMPUS / materialdatacenter.com)", url: "https://www.materialdatacenter.com/ms/en/Plexiglas/R%C3%B6hm+GmbH/PLEXIGLAS%C2%AE+7N/a7aaeaa5/2125" },
+  tpx: { label: "Mitsui Chemicals, TPX brochure", url: "https://ap.mitsuichemicals.com/sites/default/files/media/document/2018/tpx_e.pdf" },
+  eastar6763: { label: "Eastman, Eastar copolyester 6763 brochure (MBS-80Q)", url: "https://eastman.com/content/dam/eastman/corporate/en/literature/m/mbs80.pdf" },
+  ultraformPro: { label: "BASF, Ultraform N2320 003 PRO AT processing data sheet", url: "https://download.basf.com/p1/8a8082587fd4b608017fd6446cf77c4b/en/ULTRAFORM%25C2%25AE_N2320_003_PRO_AT" },
 } satisfies Record<string, Src>;
 
 export const GUIDE_SOURCES: Src[] = Object.values(S);
@@ -212,7 +211,6 @@ export function joiningFor(id: string, structure: string, thermoset: boolean): I
 const OPTICAL: Record<string, Item[]> = {
   pmma: [
     { text: "Refractive index 1.49, Abbe number 55–57, transmission 92.1 % (550 nm, 1.5 mm), haze 0.5–2 %", src: S.apollo },
-    { text: "PLEXIGLAS 7N: luminous transmittance 92 % (ISO 13468)", src: S.plexi },
     { text: "Autofluorescence: injection-molded PMMA chips had the lowest of the chips tested (PMMA < COC < PC); chips were typically 5–10× higher than BoroFloat glass. The molded PMMA chip rose unexpectedly at 633 nm.", src: S.piruska },
   ],
   pc: [
@@ -225,7 +223,7 @@ const OPTICAL: Record<string, Item[]> = {
     { text: "TOPAS 6013M-07: light transmission 91 % at 2 mm, refractive index 1.53", src: S.topasTDS },
     { text: "Autofluorescence: between PMMA and PC among the chips tested (PMMA < COC < PC).", src: S.piruska },
   ],
-  pmp: [{ text: "TPX RT18: light transmission 94 % (ASTM D1003), refractive index 1.46 (ASTM D542)", src: S.tpx }],
+  pmp: [{ text: "TPX RT18 / RT31: light transmittance 94 % (ASTM D1003), refractive index 1.462 at 589 nm (ASTM D542)", src: S.tpx }],
   pei: [{ text: "Refractive index 1.68, Abbe number 19, high birefringence", src: S.apollo }],
   petg: [{ text: "Eastar 6763 film (250 µm): total transmission 91 %, haze 0.8 % (ASTM D1003)", src: S.eastar6763 }],
   lsr: [
@@ -256,7 +254,7 @@ const MEDICAL: Record<string, Item[]> = {
   ],
   coc: [{ text: "TOPAS offers a USP Class VI / ISO 10993 series of medical-grade resins and was the first polymer line certified to USP <661.1>.", src: S.topasMed }],
   petg: [{ text: "Eastar MN058: \"Meets ISO 10993 and/or USP Class VI biocompatibility requirements\"; gamma and e-beam color stable.", src: S.eastar }],
-  lsr: [{ text: "Dow Corning QP1-250: USP Class VI; food contact acceptable.", src: S.qp1 }],
+  pom: [{ text: "Ultraform N2320 003 PRO AT (BASF): biocompatibility USP Class VI, ISO 10993-5.", src: S.ultraformPro }],
   pp: [{ text: "Purell PP grades: compliant with Ph. Eur. and/or USP; Drug Master Files filed with the FDA; ISO 10993 references in regulatory documents.", src: S.purell }],
   ldpe: [{ text: "Purell LDPE grades (e.g., PE 1840H): compliant with Ph. Eur. and/or USP; DMFs filed with the FDA.", src: S.purell }],
   hdpe: [{ text: "Purell HDPE grades (e.g., GC7260): compliant with Ph. Eur. and/or USP; DMFs filed with the FDA.", src: S.purell }],

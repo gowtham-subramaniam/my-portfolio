@@ -301,7 +301,13 @@ function Details({ p }: { p: Polymer }) {
 
 function ReferenceGrade({ p }: { p: Polymer }) {
   const r = REFS[p.id];
-  if (!r) return null;
+  if (!r)
+    return (
+      <div className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-[12px] leading-[1.6] text-[var(--subtle)]">
+        <b className="text-[var(--muted)]">No manufacturer datasheet linked yet.</b> All values for {p.abbr} are typical figures (marked <i>typ.</i>) that
+        haven&apos;t been checked against a manufacturer&apos;s own document.
+      </div>
+    );
   const rows: [string, string][] = [];
   const dag = (f?: { alt?: boolean }) => (f?.alt ? " †" : "");
   const add = (label: string, f: { v: number | [number, number]; std: string; atLeast?: boolean; alt?: boolean } | undefined, unit: string) => {
