@@ -13,7 +13,7 @@ import {
   type Rating,
 } from "./polymers";
 import PropertyChart, { type PointStatus } from "./PropertyChart";
-import StressStrainChart, { MAX_CURVES, type CurveSel } from "./StressStrainChart";
+import StressStrainChart, { MAX_CURVES, hasSSData, type CurveSel } from "./StressStrainChart";
 import { FIELD_NOTE_CATEGORIES, notesFor, type FieldNoteCategory } from "./fieldNotes";
 import { ALL_SOURCES, sourcesFor } from "./sources";
 import { ALL_READING, readingFor } from "./reading";
@@ -213,6 +213,7 @@ function ResultCard({
           Compare
         </label>
         <label
+          title={plotDisabled && !plotted ? "No published stress–strain data found for this material, or 6 already plotted" : undefined}
           className={`flex items-center gap-2 text-[13px] font-medium ${
             plotDisabled && !plotted ? "cursor-not-allowed text-[var(--faint)]" : "cursor-pointer text-[var(--muted)]"
           }`}
@@ -810,7 +811,7 @@ export default function PolymerFinder() {
   const [curves, setCurves] = useState<CurveSel[]>([
     { id: "pc", slot: 0 },
     { id: "pom", slot: 1 },
-    { id: "pa66gf", slot: 2 },
+    { id: "pps", slot: 2 },
   ]);
 
   // Download the model on first interaction, not on page load.
@@ -909,7 +910,10 @@ export default function PolymerFinder() {
     }
     return st;
   }, [ranking]);
-  const bestIds = useMemo(() => (ranking ? ranking.best.slice(0, 4).map((r) => r.polymer.id) : []), [ranking]);
+  const bestIds = useMemo(
+    () => (ranking ? ranking.best.map((r) => r.polymer.id).filter(hasSSData).slice(0, 4) : []),
+    [ranking],
+  );
   const chartLabels = ranking ? ranking.best.slice(0, 3).map((r) => r.polymer.id) : [];
   const focus = useMemo(() => (parsed ? chartFocus(parsed, disabled) : null), [parsed, disabled]);
   // Remount the chart when the search focus changes so it jumps to the relevant axes.
@@ -1006,7 +1010,7 @@ export default function PolymerFinder() {
       compareDisabled={compare.length >= MAX_COMPARE}
       onToggleCompare={() => toggleCompare(r.polymer.id)}
       plotted={curves.some((c) => c.id === r.polymer.id)}
-      plotDisabled={curves.length >= MAX_CURVES}
+      plotDisabled={curves.length >= MAX_CURVES || !hasSSData(r.polymer.id)}
       onTogglePlot={() => toggleCurve(r.polymer.id)}
     />
   );
