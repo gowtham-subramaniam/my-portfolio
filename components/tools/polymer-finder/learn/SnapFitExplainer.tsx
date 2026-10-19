@@ -210,6 +210,133 @@ const SrcA = ({ s }: { s: { label: string; url: string } }) => (
   </a>
 );
 
+/* ─────────────── side note: fixed force vs fixed deflection ─────────────── */
+
+function LengthParadox() {
+  const [mode, setMode] = useState<"deflection" | "force">("deflection");
+  const shape = SHAPES.constant;
+  const n = shape.length - 1;
+  const SHORT = 150; // px
+  const LONG = 300;
+  const H = 14; // px, same thickness for both
+  const baseDefl = 12; // px tip deflection of the short arm
+  // relative to the short arm: same deflection → strain ∝ 1/L², force ∝ 1/L³
+  //                            same force      → strain ∝ L, deflection ∝ L³
+  const arms =
+    mode === "deflection"
+      ? [
+          { label: "Short arm", L: SHORT, defl: baseDefl, strain: 1, force: 1 },
+          { label: "2× longer", L: LONG, defl: baseDefl, strain: 0.25, force: 0.125 },
+        ]
+      : [
+          { label: "Short arm", L: SHORT, defl: 6, strain: 1, force: 1 },
+          { label: "2× longer", L: LONG, defl: 48, strain: 2, force: 1 },
+        ];
+
+  const arm = (L: number, defl: number, strain: number, y0: number, key: string) => {
+    const segs: ReactNode[] = [];
+    const pt = (i: number) => {
+      const x = 40 + (i / n) * L;
+      const dv = shape[i] * defl;
+      return { x, top: y0 - H / 2 + dv, bot: y0 + H / 2 + dv };
+    };
+    for (let i = 0; i < n; i++) {
+      const a = pt(i);
+      const b = pt(i + 1);
+      const r = 0.5 * strain * (1 - (i + 0.5) / n);
+      segs.push(<polygon key={`${key}${i}`} points={`${a.x},${a.top} ${b.x + 0.6},${b.top} ${b.x + 0.6},${b.bot} ${a.x},${a.bot}`} fill={strainColor(r)} />);
+    }
+    const tip = pt(n);
+    return (
+      <g key={key}>
+        <rect x={22} y={y0 - 22} width={18} height={44} fill="url(#lp-hatch)" stroke="var(--subtle)" strokeWidth="1" />
+        <line x1={40} y1={y0} x2={40 + L} y2={y0} stroke="var(--faint)" strokeDasharray="3 4" />
+        {segs}
+        {mode === "force" ? (
+          <g stroke="var(--foreground)" fill="var(--foreground)">
+            <line x1={tip.x - 4} y1={tip.top - 26} x2={tip.x - 4} y2={tip.top - 6} strokeWidth="1.6" />
+            <polygon points={`${tip.x - 8},${tip.top - 8} ${tip.x},${tip.top - 8} ${tip.x - 4},${tip.top - 1}`} stroke="none" />
+          </g>
+        ) : (
+          <line x1={tip.x + 6} y1={y0} x2={tip.x + 6} y2={tip.top + H / 2} stroke="var(--accent)" strokeWidth="2" />
+        )}
+      </g>
+    );
+  };
+
+  return (
+    <div className="my-5 rounded-[12px] border border-[var(--border)] bg-[var(--card-bg)] p-4 sm:p-5">
+      <p className="mb-2 text-[15px] font-semibold">Wait — don&apos;t longer beams strain more?</p>
+      <p className="mb-3 text-[14px] leading-[1.7] text-[var(--muted)]">
+        Only if you push with the same force. A snap-fit is different: the undercut forces the hook to move a set distance, however
+        long the arm is. Switch between the two cases.
+      </p>
+      <div className="mb-3 inline-flex rounded-lg border border-[var(--border)] p-0.5 text-[12px]">
+        {(
+          [
+            ["deflection", "Same tip deflection (snap-fit)"],
+            ["force", "Same tip force"],
+          ] as const
+        ).map(([v, l]) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setMode(v)}
+            className={`rounded-md px-2.5 py-1 ${mode === v ? "bg-[var(--btn-bg)] text-[var(--btn-text)]" : "text-[var(--muted)] hover:text-[var(--foreground)]"}`}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+      <svg viewBox="0 0 420 230" className="h-auto w-full max-w-[560px]" role="img" aria-label="A short and a long cantilever compared under the same deflection or the same force">
+        <defs>
+          <pattern id="lp-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="var(--faint)" strokeWidth="1.2" />
+          </pattern>
+        </defs>
+        {arm(arms[0].L, arms[0].defl, arms[0].strain, 50, "s")}
+        {arm(arms[1].L, arms[1].defl, arms[1].strain, 150, "l")}
+      </svg>
+      <div className="mt-2 grid grid-cols-2 gap-3 text-[13px]">
+        {arms.map((a) => (
+          <div key={a.label} className="rounded-lg bg-[var(--background)] px-3 py-2">
+            <div className="mb-1 font-semibold">{a.label}</div>
+            <div className="text-[var(--muted)]">
+              Root strain: <b className="text-[var(--foreground)]">{a.strain === 1 ? "1×" : a.strain < 1 ? `${a.strain}× (¼)` : `${a.strain}×`}</b>
+            </div>
+            <div className="text-[var(--muted)]">
+              {mode === "deflection" ? (
+                <>
+                  Force needed: <b className="text-[var(--foreground)]">{a.force === 1 ? "1×" : "⅛×"}</b>
+                </>
+              ) : (
+                <>
+                  Tip deflection: <b className="text-[var(--foreground)]">{a.L === SHORT ? "1×" : "8×"}</b>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[13px] leading-[1.7] text-[var(--muted)]">
+        {mode === "deflection" ? (
+          <>
+            Same deflection: the long arm spreads the bend over a gentle curve, so its root strains a quarter as much (ε ∝ y·h/L²).
+            It also needs only an eighth of the force to deflect (P ∝ y·h³/L³), which is the catch: a longer arm survives but holds
+            with less force.
+          </>
+        ) : (
+          <>
+            Same force: the root moment is force × length, so the long arm&apos;s root strains twice as much (ε ∝ P·L/h²) and its tip
+            moves eight times as far (∝ L³). This is the beam-on-a-shelf case most people picture, but it is not how a snap-fit is
+            loaded.
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
 /* ─────────────────────────── page ─────────────────────────── */
 
 export default function SnapFitExplainer({ initialMaterial }: { initialMaterial?: string }) {
@@ -369,6 +496,7 @@ export default function SnapFitExplainer({ initialMaterial }: { initialMaterial?
           the hook must move. A deeper undercut holds better but strains more.
         </li>
       </ul>
+      <LengthParadox />
 
       <h2 className={H2}>3. Taper the arm to share the load</h2>
       <p className={P}>
