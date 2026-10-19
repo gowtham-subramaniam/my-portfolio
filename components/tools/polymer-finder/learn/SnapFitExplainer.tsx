@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { POLYMERS } from "../polymers";
 import { SNAP_SOURCES, snapLimit, type SnapLimit } from "../guides";
 
@@ -337,6 +337,111 @@ function LengthParadox() {
   );
 }
 
+/* ─────────────── what "4 % strain" means ─────────────── */
+
+function StrainMeaning() {
+  // Exaggerated drawing: a 10-unit mark on the top, middle and bottom of a bar, straight and bent.
+  const len = 140; // px, mark length on the neutral axis
+  const t = 34; // px, bar thickness
+  const R = 170; // px, bend radius of the neutral axis (exaggerated)
+  const th = len / R;
+  const cx = 300 + 0; // centre of the bent bar's marks
+  const cy = 70 + R; // arc centre below the bar
+  const arc = (r: number) => {
+    const a0 = -Math.PI / 2 - th / 2;
+    const a1 = -Math.PI / 2 + th / 2;
+    return `M ${cx + r * Math.cos(a0)} ${cy + r * Math.sin(a0)} A ${r} ${r} 0 0 1 ${cx + r * Math.cos(a1)} ${cy + r * Math.sin(a1)}`;
+  };
+  const band = () => {
+    const r1 = R + t / 2 + 14;
+    const r0 = R - t / 2 - 14;
+    const a0 = -Math.PI / 2 - th / 2 - 0.12;
+    const a1 = -Math.PI / 2 + th / 2 + 0.12;
+    const p = (r: number, a: number) => `${cx + r * Math.cos(a)} ${cy + r * Math.sin(a)}`;
+    return `M ${p(r1, a0)} A ${r1} ${r1} 0 0 1 ${p(r1, a1)} L ${p(r0, a1)} A ${r0} ${r0} 0 0 0 ${p(r0, a0)} Z`;
+  };
+  return (
+    <div className="my-5 rounded-[12px] border border-[var(--border)] bg-[var(--card-bg)] p-4 sm:p-5">
+      <p className="mb-2 text-[15px] font-semibold">What does &ldquo;4 % strain&rdquo; mean?</p>
+      <svg viewBox="0 0 420 150" className="h-auto w-full max-w-[560px]" role="img" aria-label="A straight bar and a bent bar: the top surface stretches, the bottom shortens, the middle keeps its length">
+        {/* straight bar */}
+        <rect x={20} y={60} width={len} height={t + 28} fill="rgb(200,208,214)" stroke="var(--subtle)" />
+        {[60, 60 + t / 2 + 14, 60 + t + 28].map((yy, i) => (
+          <line key={i} x1={20} y1={yy} x2={20 + len} y2={yy} stroke={i === 1 ? "var(--subtle)" : "var(--foreground)"} strokeWidth={i === 1 ? 1 : 2.5} strokeDasharray={i === 1 ? "4 4" : undefined} />
+        ))}
+        <text x={20 + len / 2} y={50} textAnchor="middle" fontSize="11" fill="var(--muted)">straight: all three marks 10 mm</text>
+        <text x={20 + len / 2} y={142} textAnchor="middle" fontSize="11" fill="var(--subtle)">before bending</text>
+        {/* bent bar */}
+        <path d={band()} fill="rgb(200,208,214)" stroke="var(--subtle)" />
+        <path d={arc(R + t / 2 + 14)} fill="none" stroke="#c43a28" strokeWidth="3" />
+        <path d={arc(R)} fill="none" stroke="var(--subtle)" strokeWidth="1" strokeDasharray="4 4" />
+        <path d={arc(R - t / 2 - 14)} fill="none" stroke="#2563a8" strokeWidth="3" />
+        <text x={cx} y={24} textAnchor="middle" fontSize="11" fill="#c43a28">top: 10.4 mm (+4 %, stretched)</text>
+        <text x={cx} y={cy - R + 24} textAnchor="middle" fontSize="10" fill="var(--muted)">middle: 10 mm (0 %)</text>
+        <text x={cx} y={cy - R + t / 2 + 40} textAnchor="middle" fontSize="11" fill="#2563a8">bottom: 9.6 mm (−4 %, compressed)</text>
+      </svg>
+      <p className="mt-1 text-[11px] text-[var(--faint)]">Drawing exaggerated for clarity.</p>
+      <div className="mt-3 space-y-2 text-[14px] leading-[1.7] text-[var(--muted)]">
+        <p>
+          <b className="text-[var(--foreground)]">Strain is stretch divided by original length.</b> Draw a 10 mm line on the top
+          surface of the arm, then bend it. If the line now measures 10.4 mm, that surface is at 0.4 ÷ 10 = 0.04 = 4 % strain. It has
+          no units: a 4 % strain stretches a 1 mm line by 0.04 mm and a 100 mm line by 4 mm.
+        </p>
+        <p>
+          <b className="text-[var(--foreground)]">Bending stretches one side and squeezes the other.</b> The outer (convex) surface
+          lengthens, the inner surface shortens by about the same amount, and the middle plane, the neutral axis, keeps its
+          length. The surface strain is ε = (h/2) ÷ R: half the thickness divided by the bend radius. Thicker arms and tighter bends
+          stretch the surface more, and the arm bends tightest at the root.
+        </p>
+        <p>
+          <b className="text-[var(--foreground)]">Where a limit like 4 % comes from.</b> In a tensile test (ISO 527 / ASTM D638) a
+          bar is pulled while an extensometer measures how much it stretches. The datasheet reports the strain at yield, where the
+          plastic starts to deform permanently. A snap-fit limit is set below that, so the arm springs fully back: Bayer gives 4 %
+          for Makrolon PC, and the Celanese rule uses 70 % of the yield strain for other materials.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Derivation() {
+  return (
+    <details className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-[14px] leading-[1.75] text-[var(--muted)]">
+      <summary className="cursor-pointer font-semibold text-[var(--foreground)]">Show the derivation (constant thickness)</summary>
+      <p className="mt-3">
+        Treat the arm as a cantilever with a force P at the tip. E is the material&apos;s modulus, b the arm width and I = b·h³/12 its
+        second moment of area.
+      </p>
+      <ol className="mt-2 list-decimal space-y-2 pl-5">
+        <li>
+          Tip deflection of a cantilever: <span className="font-mono">y = P·L³ / (3·E·I)</span>, so the force the undercut imposes
+          is <span className="font-mono">P = 3·E·I·y / L³</span>.
+        </li>
+        <li>
+          The bending moment is largest at the root: <span className="font-mono">M = P·L</span>.
+        </li>
+        <li>
+          Surface stress there is <span className="font-mono">σ = M·(h/2) / I</span>, and strain is{" "}
+          <span className="font-mono">ε = σ / E = P·L·h / (2·E·I)</span>.
+        </li>
+        <li>
+          Substitute P from step 1: <span className="font-mono">ε = (3·E·I·y / L³)·L·h / (2·E·I) = 1.5·y·h / L²</span>. Written as
+          y = 0.67·ε·L²/h, this is where k = 0.67 comes from.
+        </li>
+      </ol>
+      <p className="mt-3">
+        <b className="text-[var(--foreground)]">E and I cancel.</b> The root strain depends only on geometry, not on the material
+        or the arm width. The material enters only when you compare against its allowable strain. The force does depend on the
+        material: P = b·h²·E·ε / (6·L), which is why force calculations need the secant modulus.
+      </p>
+      <p className="mt-2">
+        For the tapered arm, I changes along the length, so the curvature M/(E·I) is integrated along the arm instead. That gives
+        y = 1.09·ε·L²/h, the value Bayer gives for its design type 2. <SrcA s={SNAP_SOURCES.bayer} />
+      </p>
+    </details>
+  );
+}
+
 /* ─────────────────────────── page ─────────────────────────── */
 
 export default function SnapFitExplainer({ initialMaterial }: { initialMaterial?: string }) {
@@ -475,13 +580,36 @@ export default function SnapFitExplainer({ initialMaterial }: { initialMaterial?
         first. Bayer&apos;s design guide puts it plainly: for these designs &ldquo;the vulnerable cross section is always at the
         root.&rdquo; <SrcA s={SNAP_SOURCES.bayer} />
       </p>
+      <StrainMeaning />
 
       <h2 className={H2}>2. One equation explains every design rule</h2>
       <div className="mb-3 rounded-lg border border-[var(--border)] bg-[var(--card-bg)] px-4 py-3 text-center font-mono text-[16px]">
         ε<sub>root</sub> = y · h / (k · L²)
         <div className="mt-1 font-sans text-[12px] text-[var(--subtle)]">k = 0.67 for constant thickness, 1.09 tapered to h/2</div>
       </div>
-      <p className={P}>From simple beam theory (small deflection, linear elastic material). Read it term by term:</p>
+      <dl className="mb-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[14px] leading-[1.6]">
+        {(
+          [
+            ["ε root", "Strain at the root's outer surface: how much it stretches divided by its original length (0.025 = 2.5 %)."],
+            ["y", "How far the hook tip must move to pass the mating part, which is the undercut depth (mm)."],
+            ["h", "Arm thickness at the root, measured in the direction it bends (mm)."],
+            ["L", "Arm length, from the root to the hook (mm)."],
+            ["k", "Shape factor: 0.67 for constant thickness, 1.09 if the arm tapers to half thickness at the tip."],
+          ] as const
+        ).map(([t, d]) => (
+          <Fragment key={t}>
+            <dt className="font-mono font-semibold text-[var(--foreground)]">{t}</dt>
+            <dd className="text-[var(--muted)]">{d}</dd>
+          </Fragment>
+        ))}
+      </dl>
+      <p className={P}>
+        Example with the demo&apos;s starting values: y = 1.2 mm, h = 2 mm, L = 12 mm gives ε = 1.2 × 2 ÷ (0.67 × 12²) = 0.025, so
+        the root surface stretches 2.5 %. Makrolon PC allows 4 %.
+      </p>
+      <p className={P}>The equation comes from simple beam theory (small deflection, linear elastic material).</p>
+      <Derivation />
+      <p className={P}>Read it term by term:</p>
       <ul className="mb-3 space-y-2 pl-1 text-[15px] leading-[1.7] text-[var(--muted)]">
         <li>
           <b className="text-[var(--foreground)]">L² is the big lever.</b> Double the length and the strain drops to a quarter. When
