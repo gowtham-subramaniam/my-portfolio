@@ -442,6 +442,11 @@ function GuideSections({ p }: { p: Polymer }) {
         <div key={title}>
           <h4 className={`mb-1.5 ${LABEL}`}>{title}</h4>
           <ItemList items={items} />
+          {title === "Snap-fit strain" && p.structure !== "Elastomer" && (
+            <a href={`/tools/polymer-finder/learn/snap-fit?m=${p.id}`} className="mt-1.5 inline-block text-[13px] font-semibold text-[var(--accent)] hover:underline">
+              See it interactively: why snap-fits break at the root →
+            </a>
+          )}
         </div>
       ))}
     </div>
@@ -991,6 +996,12 @@ export default function PolymerFinder() {
         <p className="mt-3 max-w-[620px] text-[13px] leading-[1.6] text-[var(--subtle)]">
           For screening only. Values marked ✓ come from the manufacturer documents linked in each material&apos;s details; always
           confirm with the datasheet for the exact grade you use. <a href="#pf-notice" className="text-[var(--accent)] hover:underline">About this data</a>
+        </p>
+        <p className="mt-3 text-[14px]">
+          <span className="text-[var(--subtle)]">New · Learn: </span>
+          <a href="/tools/polymer-finder/learn/snap-fit" className="font-semibold text-[var(--accent)] hover:underline">
+            Why snap-fits break at the root (interactive) →
+          </a>
         </p>
       </header>
 

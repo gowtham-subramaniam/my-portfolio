@@ -102,6 +102,35 @@ export function designFor(id: string, elastomer: boolean): Item[] {
 
 /* ── Snap-fits ── */
 
+export interface SnapLimit {
+  /** Allowable strain for a single assembly, % */
+  single: number;
+  /** Allowable strain for repeated assembly, % */
+  repeated: number;
+  /** One line on where the number comes from */
+  basis: string;
+  src: Src;
+}
+
+/** Numeric allowable snap-fit strain, from the same sources as snapFitFor. */
+export function snapLimit(id: string): SnapLimit | null {
+  if (id === "pc") return { single: 4, repeated: 2.4, basis: "Bayer table value for unreinforced Makrolon PC at 23 °C", src: S.bayer };
+  if (id === "pcabs") return { single: 2.5, repeated: 1.5, basis: "Bayer table value for Bayblend PC/ABS at 23 °C", src: S.bayer };
+  const r = REFS[id];
+  if (!r) return null;
+  if (r.yieldStrain !== undefined) {
+    const a = +(0.7 * r.yieldStrain).toFixed(1);
+    return { single: a, repeated: +(0.6 * a).toFixed(1), basis: `70 % of the ${r.yieldStrain} % yield strain of ${r.grade}`, src: S.celanese };
+  }
+  if (r.tensile?.what === "break" && r.elongation && !Array.isArray(r.elongation.v) && !r.elongation.atLeast) {
+    const a = +(0.5 * r.elongation.v).toFixed(2);
+    return { single: a, repeated: +(0.6 * a).toFixed(2), basis: `50 % of the ${r.elongation.v} % strain at break of ${r.grade}`, src: S.celanese };
+  }
+  return null;
+}
+
+export const SNAP_SOURCES = { bayer: S.bayer, celanese: S.celanese };
+
 export function snapFitFor(id: string): Item[] {
   if (id === "pc")
     return [
